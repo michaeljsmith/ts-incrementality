@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { host, incremental } from "./incrementality.js";
+import { incremental } from "./incremental.js";
+import { host } from "./host.js";
 
 type FullName = {
   first: string;
