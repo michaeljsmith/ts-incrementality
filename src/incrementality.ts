@@ -2,7 +2,7 @@ export interface Cache {
   (key: string): CacheEntry;
 
   // For detecting tracking duplicate key usage.
-  visitKey: number;
+  incrementVisitKey(): void;
 }
 
 export interface CacheEntry {
@@ -19,6 +19,7 @@ type Memoization<T, Args extends [unknown]> = {
 
 function newCache(): Cache {
   const cache = new Map<string, {visitKey: number, entry: CacheEntry}>();
+  let visitKey = 0;
   const result = (key: string) => {
     let node = cache.get(key);
     if (node === undefined) {
@@ -28,13 +29,15 @@ function newCache(): Cache {
       }
       cache.set(key, node);
     }
-    if (node.visitKey === result.visitKey) {
+    if (node.visitKey === visitKey) {
       throw `Referenced cache entry ${key} multiple times.`;
-    };
-    node.visitKey = result.visitKey;
+    }
+    node.visitKey = visitKey;
     return node.entry;
   };
-  result.visitKey = 0;
+  result.incrementVisitKey = () => {
+    ++visitKey;
+  };
 
   return result;
 }
@@ -75,7 +78,7 @@ export function incremental<T, Args extends [unknown]>(
     memoization.previousArgs = args;
 
     // Increment the visit key, so that one call to each sub-node will be allowed.
-    memoization.cache.visitKey++;
+    memoization.cache.incrementVisitKey();
 
     const result = fn(memoization.cache)(...args);
     memoization.previousResult = result;
