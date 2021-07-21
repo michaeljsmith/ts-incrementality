@@ -6,7 +6,7 @@ function compare(a: string, b: string) {
   return a < b ? -1 : (a > b ? 1 : 0);
 }
 
-function node(color: Color, left: RbTree<string>, value: string, right: RbTree<string>) {
+function node<T>(color: Color, left: RbTree<T>, value: T, right: RbTree<T>) {
   return {color, left, value, right};
 }
 
@@ -111,6 +111,25 @@ describe('red-black-tree', function() {
           node(Color.B, null, 'a', null),
           'b',
           node(Color.B, null, 'c', null)));
+    });
+
+    it('replaces existing item', function() {
+      type Entry = {key: string, value: number};
+      const compareKey = (a: Entry, b: Entry) => compare(a.key, b.key);
+      const entry = (key: string, value: number) => ({key, value,});
+
+      const original = node(
+        Color.B,
+        null,
+        entry('a', 1),
+        node(Color.R, null, entry('b', 1), null));
+      const final = insert(original, entry('b', 2), compareKey);
+      expect(final).deep.equals(
+        node(
+          Color.B,
+          null,
+          entry('a', 1),
+          node(Color.R, null, entry('b', 2), null)));
     });
   });
 });

@@ -35,8 +35,12 @@ function insertWithPossibleTopLevelRedViolation<T>(
   // Check whether the item belongs in the left or right subtree.
   const comparison = comparator(value, tree.value);
   if (comparison == 0) {
-    // TODO: Should we simply overwrite the value?
-    throw 'Item already exists in tree.';
+    // This is the correct position for the value, but there is already a value
+    // here - update it.
+    return {
+      ...tree,
+      value,
+    };
   } else if (comparison < 0) {
     // Insert in left subtree.
     return balanceWithPossibleTopLevelRedViolation({
