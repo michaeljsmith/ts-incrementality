@@ -21,7 +21,7 @@ const nameLength = incremental(cache =>
     return name.length;
   });
 
-describe('filter', function() {
+describe('incremental', function() {
   it('evaluates result', function() {
     const fullName = {first: 'Sue', second: 'Sanderson'};
     const update = host(totalNameLength);
