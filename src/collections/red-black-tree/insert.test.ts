@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { insert } from "./insert.js";
+import { rbInsert } from "./insert.js";
 import { Color, RbTree } from "./tree.js";
 
 function compare(a: string, b: string) {
@@ -7,22 +7,22 @@ function compare(a: string, b: string) {
 }
 
 function node<T>(color: Color, left: RbTree<T>, value: T, right: RbTree<T>) {
-  return {color, left, value, right};
+  return {color, tombstone: false, left, value, right};
 }
 
 function tombstone<T>(color: Color, left: RbTree<T>, right: RbTree<T>) {
-  return {color, left, right};
+  return {color, tombstone: true, left, value: '', right};
 }
 
 describe('red-black-tree', function() {
   describe('insert', function() {
     it('inserts into empty tree', function() {
-      expect(insert(null, 'a', compare)).deep.equals(node(Color.B, null, 'a', null));
+      expect(rbInsert(null, 'a', compare)).deep.equals(node(Color.B, null, 'a', null));
     })
 
     it('inserts to left', function() {
       const original = node(Color.B, null, 'b', null);
-      const final = insert(original, 'a', compare);
+      const final = rbInsert(original, 'a', compare);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -33,7 +33,7 @@ describe('red-black-tree', function() {
 
     it('inserts to right', function() {
       const original = node(Color.B, null, 'a', null);
-      const final = insert(original, 'b', compare);
+      const final = rbInsert(original, 'b', compare);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -48,7 +48,7 @@ describe('red-black-tree', function() {
         node(Color.R, null, 'a', null),
         'b',
         null);
-      const final = insert(original, 'c', compare);
+      const final = rbInsert(original, 'c', compare);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -63,7 +63,7 @@ describe('red-black-tree', function() {
         node(Color.R, null, 'b', null),
         'c',
         null);
-      const final = insert(original, 'a', compare);
+      const final = rbInsert(original, 'a', compare);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -78,7 +78,7 @@ describe('red-black-tree', function() {
         node(Color.R, null, 'a', null),
         'c',
         null);
-      const final = insert(original, 'b', compare);
+      const final = rbInsert(original, 'b', compare);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -93,7 +93,7 @@ describe('red-black-tree', function() {
         null,
         'a',
         node(Color.R, null, 'c', null));
-      const final = insert(original, 'b', compare);
+      const final = rbInsert(original, 'b', compare);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -108,7 +108,7 @@ describe('red-black-tree', function() {
         null,
         'a',
         node(Color.R, null, 'b', null));
-      const final = insert(original, 'c', compare);
+      const final = rbInsert(original, 'c', compare);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -127,7 +127,7 @@ describe('red-black-tree', function() {
         null,
         entry('a', 1),
         node(Color.R, null, entry('b', 1), null));
-      const final = insert(original, entry('b', 2), compareKey);
+      const final = rbInsert(original, entry('b', 2), compareKey);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -141,7 +141,7 @@ describe('red-black-tree', function() {
         Color.B,
         null,
         null);
-      const final = insert(original, 'a', compare);
+      const final = rbInsert(original, 'a', compare);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -155,7 +155,7 @@ describe('red-black-tree', function() {
         Color.B,
         tombstone(Color.B, null, null),
         tombstone(Color.B, null, null));
-      const final = insert(original, 'a', compare);
+      const final = rbInsert(original, 'a', compare);
       expect(final).deep.equals(
         node(
           Color.B,
@@ -169,7 +169,7 @@ describe('red-black-tree', function() {
         Color.B,
         node(Color.B, null, 'a', null),
         node(Color.B, null, 'b', null));
-      const final = insert(original, 'c', compare);
+      const final = rbInsert(original, 'c', compare);
       expect(final).deep.equals(
         tombstone(
           Color.B,
@@ -186,7 +186,7 @@ describe('red-black-tree', function() {
         Color.B,
         tombstone(Color.B, null, null),
         node(Color.B, null, 'b', null));
-      const final = insert(original, 'c', compare);
+      const final = rbInsert(original, 'c', compare);
       expect(final).deep.equals(
         tombstone(
           Color.B,
@@ -203,7 +203,7 @@ describe('red-black-tree', function() {
         Color.B,
         node(Color.B, null, 'b', null),
         node(Color.B, null, 'c', null));
-      const final = insert(original, 'a', compare);
+      const final = rbInsert(original, 'a', compare);
       expect(final).deep.equals(
         tombstone(
           Color.B,
@@ -220,7 +220,7 @@ describe('red-black-tree', function() {
         Color.B,
         node(Color.B, null, 'b', null),
         tombstone(Color.B, null, null));
-      const final = insert(original, 'a', compare);
+      const final = rbInsert(original, 'a', compare);
       expect(final).deep.equals(
         tombstone(
           Color.B,

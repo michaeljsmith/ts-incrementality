@@ -1,6 +1,6 @@
 import { Color, Comparator, RbNode, RbTree } from "./tree.js";
 
-export function insert<T>(
+export function rbInsert<T>(
   tree: RbTree<T>, value: T, comparator: Comparator<T>): RbTree<T> {
   const resultWithPossibleTopLevelRedViolation =
     insertWithPossibleTopLevelRedViolation(tree, value, comparator);
@@ -26,6 +26,7 @@ function insertWithPossibleTopLevelRedViolation<T>(
   if (tree === null) {
     return {
       color: Color.R,
+      tombstone: false,
       left: null,
       value,
       right: null,
@@ -35,7 +36,7 @@ function insertWithPossibleTopLevelRedViolation<T>(
   // Check whether the item belongs in the left or right subtree.
   let comparison;
   // Check if the value is a tombstone.
-  if (!('value' in tree) || tree.value === undefined) {
+  if (tree.tombstone) {
     const maxLeft = maxValue(tree.left, comparator);
     const minRight = minValue(tree.right, comparator);
     // Value is a tombstone - replace it if this is the right place in the
@@ -57,6 +58,7 @@ function insertWithPossibleTopLevelRedViolation<T>(
     // here - update it.
     return {
       ...tree,
+      tombstone: false,
       value,
     };
   } else if (comparison < 0) {
@@ -187,5 +189,5 @@ function maxValue<T>(tree: RbTree<T>, comparator: Comparator<T>): Value<T> | und
 }
 
 function rootValue<T>(node: RbNode<T>): Value<T> | undefined {
-  return 'value' in node && node.value !== undefined ? { value: node.value } : undefined;
+  return node.tombstone ? undefined : { value: node.value };
 }

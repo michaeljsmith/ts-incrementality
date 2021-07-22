@@ -3,8 +3,9 @@ export enum Color {R, B}
 
 export type RbNode<T> = {
   color: Color;
+  tombstone: boolean;
   left: RbTree<T>;
-  value?: T; // Missing value indicates tombstone.
+  value: T;
   right: RbTree<T>;
 };
 
