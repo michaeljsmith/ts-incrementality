@@ -10,6 +10,10 @@ function node<T>(color: Color, left: RbTree<T>, value: T, right: RbTree<T>) {
   return {color, left, value, right};
 }
 
+function tombstone<T>(color: Color, left: RbTree<T>, right: RbTree<T>) {
+  return {color, left, right};
+}
+
 describe('red-black-tree', function() {
   describe('insert', function() {
     it('inserts into empty tree', function() {
@@ -130,6 +134,102 @@ describe('red-black-tree', function() {
           null,
           entry('a', 1),
           node(Color.R, null, entry('b', 2), null)));
+    });
+
+    it('replaces singleton tombstone', function() {
+      const original = tombstone<string>(
+        Color.B,
+        null,
+        null);
+      const final = insert(original, 'a', compare);
+      expect(final).deep.equals(
+        node(
+          Color.B,
+          null,
+          'a',
+          null));
+    });
+
+    it('replaces root tombstone in graveyard', function() {
+      const original = tombstone<string>(
+        Color.B,
+        tombstone(Color.B, null, null),
+        tombstone(Color.B, null, null));
+      const final = insert(original, 'a', compare);
+      expect(final).deep.equals(
+        node(
+          Color.B,
+          tombstone(Color.B, null, null),
+          'a',
+          tombstone(Color.B, null, null)));
+    });
+
+    it('recurses right past tombstone when left present', function() {
+      const original = tombstone<string>(
+        Color.B,
+        node(Color.B, null, 'a', null),
+        node(Color.B, null, 'b', null));
+      const final = insert(original, 'c', compare);
+      expect(final).deep.equals(
+        tombstone(
+          Color.B,
+          node(Color.B, null, 'a', null),
+          node(
+            Color.B,
+            null,
+            'b',
+            node(Color.R, null, 'c', null))));
+    });
+
+    it('recurses right past tombstone when left missing', function() {
+      const original = tombstone<string>(
+        Color.B,
+        tombstone(Color.B, null, null),
+        node(Color.B, null, 'b', null));
+      const final = insert(original, 'c', compare);
+      expect(final).deep.equals(
+        tombstone(
+          Color.B,
+          tombstone(Color.B, null, null),
+          node(
+            Color.B,
+            null,
+            'b',
+            node(Color.R, null, 'c', null))));
+    });
+
+    it('recurses left past tombstone when right present', function() {
+      const original = tombstone<string>(
+        Color.B,
+        node(Color.B, null, 'b', null),
+        node(Color.B, null, 'c', null));
+      const final = insert(original, 'a', compare);
+      expect(final).deep.equals(
+        tombstone(
+          Color.B,
+          node(
+            Color.B,
+            node(Color.R, null, 'a', null),
+            'b',
+            null),
+          node(Color.B, null, 'c', null)));
+    });
+
+    it('recurses left past tombstone when right missing', function() {
+      const original = tombstone<string>(
+        Color.B,
+        node(Color.B, null, 'b', null),
+        tombstone(Color.B, null, null));
+      const final = insert(original, 'a', compare);
+      expect(final).deep.equals(
+        tombstone(
+          Color.B,
+          node(
+            Color.B,
+            node(Color.R, null, 'a', null),
+            'b',
+            null),
+          tombstone(Color.B, null, null)));
     });
   });
 });

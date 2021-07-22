@@ -1,7 +1,7 @@
 import { Color, Comparator, RbNode, RbTree } from "./tree.js";
 
 export function insert<T>(
-    tree: RbTree<T>, value: T, comparator: Comparator<T>): RbTree<T> {
+  tree: RbTree<T>, value: T, comparator: Comparator<T>): RbTree<T> {
   const resultWithPossibleTopLevelRedViolation =
     insertWithPossibleTopLevelRedViolation(tree, value, comparator);
 
@@ -15,7 +15,7 @@ export function insert<T>(
 }
 
 function insertWithPossibleTopLevelRedViolation<T>(
-   tree: RbTree<T>, value: T, comparator: Comparator<T>): RbNode<T> {
+  tree: RbTree<T>, value: T, comparator: Comparator<T>): RbNode<T> {
   // The tree returned by this function may include a red violation. This
   // must be resolved by the caller.
 
@@ -33,8 +33,26 @@ function insertWithPossibleTopLevelRedViolation<T>(
   }
 
   // Check whether the item belongs in the left or right subtree.
-  const comparison = comparator(value, tree.value);
-  if (comparison == 0) {
+  let comparison;
+  // Check if the value is a tombstone.
+  if (!('value' in tree) || tree.value === undefined) {
+    const maxLeft = maxValue(tree.left, comparator);
+    const minRight = minValue(tree.right, comparator);
+    // Value is a tombstone - replace it if this is the right place in the
+    // tree for the new value.
+    comparison =
+      // Recurse to left if the value is lte max of left.
+      maxLeft !== undefined && comparator(value, maxLeft.value) <= 0 ? -1 :
+      // Recurse to the right if the value is gte min of right.
+        minRight !== undefined && comparator(value, minRight.value) >= 0 ? 1 :
+          // Else the current node is the best place to insert.
+          0;
+  } else {
+    // Not a tombstone - choose subtree based on value in node.
+    comparison = comparator(value, tree.value);
+  }
+
+  if (comparison === 0) {
     // This is the correct position for the value, but there is already a value
     // here - update it.
     return {
@@ -140,4 +158,34 @@ function balanceWithPossibleTopLevelRedViolation<T>(tree: RbNode<T>): RbNode<T> 
   }
 
   return tree;
+}
+
+type Value<T> = { value: T };
+
+function minValue<T>(tree: RbTree<T>, comparator: Comparator<T>): Value<T> | undefined {
+  if (tree === null) {
+    return undefined;
+  }
+
+  // Due to the possible presence of tombstones, we may need to scan other options
+  // than just the left subtree.
+  return minValue(tree.left, comparator) ??
+    rootValue(tree) ??
+    minValue(tree.right, comparator);
+}
+
+function maxValue<T>(tree: RbTree<T>, comparator: Comparator<T>): Value<T> | undefined {
+  if (tree === null) {
+    return undefined;
+  }
+
+  // Due to the possible presence of tombstones, we may need to scan other options
+  // than just the right subtree.
+  return maxValue(tree.right, comparator) ??
+    rootValue(tree) ??
+    maxValue(tree.left, comparator);
+}
+
+function rootValue<T>(node: RbNode<T>): Value<T> | undefined {
+  return 'value' in node && node.value !== undefined ? { value: node.value } : undefined;
 }
