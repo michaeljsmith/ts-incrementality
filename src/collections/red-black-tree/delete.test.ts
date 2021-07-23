@@ -22,12 +22,12 @@ describe('red-black-tree', function() {
 
     it('throws when item not found', function() {
       const original = node(Color.B, null, 'a', null);
-      expect(() => rbDelete(null, 'b', compare)).throws();
+      expect(() => rbDelete(original, 'b', compare)).throws();
     });
 
     it('throws when item already deleted', function() {
       const original = tombstone(Color.B, null, 'a', null);
-      expect(() => rbDelete(null, 'a', compare)).throws();
+      expect(() => rbDelete(original, 'a', compare)).throws();
     })
 
     it('recurses left', function() {
