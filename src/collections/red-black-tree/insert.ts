@@ -1,7 +1,7 @@
-import { Color, Comparator, KeyValue, RbNode, RbTree } from "./tree.js";
+import { Color, Comparator, RBKeyValue, RbNode, RbTree } from "./tree.js";
 
 export function rbInsert<K, V>(
-  tree: RbTree<K, V>, keyValue: KeyValue<K, V>, comparator: Comparator<K>): RbTree<K, V> {
+  tree: RbTree<K, V>, keyValue: RBKeyValue<K, V>, comparator: Comparator<K>): RbTree<K, V> {
   const resultWithPossibleTopLevelRedViolation =
     insertWithPossibleTopLevelRedViolation(tree, keyValue, comparator);
 
@@ -15,7 +15,7 @@ export function rbInsert<K, V>(
 }
 
 function insertWithPossibleTopLevelRedViolation<K, V>(
-  tree: RbTree<K, V>, keyValue: KeyValue<K, V>, comparator: Comparator<K>): RbNode<K, V> {
+  tree: RbTree<K, V>, keyValue: RBKeyValue<K, V>, comparator: Comparator<K>): RbNode<K, V> {
   // The tree returned by this function may include a red violation. This
   // must be resolved by the caller.
 

@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { rbInsert } from "./insert.js";
-import { Color, KeyValue, RbNode, RbTree } from "./tree.js";
+import { Color, RBKeyValue, RbNode, RbTree } from "./tree.js";
 
 function compare(a: string, b: string) {
   return a < b ? -1 : (a > b ? 1 : 0);
@@ -14,7 +14,7 @@ function tombstone(color: Color, left: RbTree<string, void>, right: RbTree<strin
   return {color, tombstone: true, left, keyValue: {key: '', value: undefined}, right};
 }
 
-function keyValue<K>(key: K): KeyValue<K, void> {
+function keyValue<K>(key: K): RBKeyValue<K, void> {
   return {key, value: undefined};
 }
 
