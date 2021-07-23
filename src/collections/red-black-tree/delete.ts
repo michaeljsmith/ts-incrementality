@@ -37,6 +37,6 @@ export function rbDelete<K, V>(tree: RbTree<K, V>, key: K, comparator: Comparato
     return {
       ...tree,
       right: rbDelete(tree.right, key, comparator),
-    }
+    };
   }
 }
