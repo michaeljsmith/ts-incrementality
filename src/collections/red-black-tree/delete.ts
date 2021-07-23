@@ -6,9 +6,9 @@
 //
 // [1]: https://matt.might.net/papers/germane2014deletion.pdf
 
-import { Comparator, RbNode, RbTree } from "./tree.js";
+import { RbComparator, RbNode, RbTree } from "./tree.js";
 
-export function rbDelete<K, V>(tree: RbTree<K, V>, key: K, comparator: Comparator<K>): RbTree<K, V> {
+export function rbDelete<K, V>(tree: RbTree<K, V>, key: K, comparator: RbComparator<K>): RbTree<K, V> {
   if (tree === null) {
     throw `item '${key}' not found in tree.`;
   }

@@ -1,7 +1,7 @@
-import { Color, Comparator, RBKeyValue, RbNode, RbTree } from "./tree.js";
+import { Color, RbComparator, RBKeyValue, RbNode, RbTree } from "./tree.js";
 
 export function rbInsert<K, V>(
-  tree: RbTree<K, V>, keyValue: RBKeyValue<K, V>, comparator: Comparator<K>): RbTree<K, V> {
+  tree: RbTree<K, V>, keyValue: RBKeyValue<K, V>, comparator: RbComparator<K>): RbTree<K, V> {
   const resultWithPossibleTopLevelRedViolation =
     insertWithPossibleTopLevelRedViolation(tree, keyValue, comparator);
 
@@ -15,7 +15,7 @@ export function rbInsert<K, V>(
 }
 
 function insertWithPossibleTopLevelRedViolation<K, V>(
-  tree: RbTree<K, V>, keyValue: RBKeyValue<K, V>, comparator: Comparator<K>): RbNode<K, V> {
+  tree: RbTree<K, V>, keyValue: RBKeyValue<K, V>, comparator: RbComparator<K>): RbNode<K, V> {
   // The tree returned by this function may include a red violation. This
   // must be resolved by the caller.
 
@@ -164,7 +164,7 @@ function balanceWithPossibleTopLevelRedViolation<K, V>(tree: RbNode<K, V>): RbNo
 
 type KeyResult<K> = { key: K };
 
-function minKey<K, V>(tree: RbTree<K, V>, comparator: Comparator<K>): KeyResult<K> | undefined {
+function minKey<K, V>(tree: RbTree<K, V>, comparator: RbComparator<K>): KeyResult<K> | undefined {
   if (tree === null) {
     return undefined;
   }
@@ -176,7 +176,7 @@ function minKey<K, V>(tree: RbTree<K, V>, comparator: Comparator<K>): KeyResult<
     minKey(tree.right, comparator);
 }
 
-function maxKey<K, V>(tree: RbTree<K, V>, comparator: Comparator<K>): KeyResult<K> | undefined {
+function maxKey<K, V>(tree: RbTree<K, V>, comparator: RbComparator<K>): KeyResult<K> | undefined {
   if (tree === null) {
     return undefined;
   }

@@ -16,4 +16,4 @@ export type RbNode<K, V> = {
 
 export type RbTree<K, V> = RbNode<K, V> | null;
 
-export type Comparator<T> = (a: T, b: T) => number;
+export type RbComparator<T> = (a: T, b: T) => number;

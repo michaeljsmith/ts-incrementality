@@ -1,6 +1,6 @@
-import { Comparator, RbNode, RbTree } from "./tree.js";
+import { RbComparator, RbNode, RbTree } from "./tree.js";
 
-export function rbFind<K, V>(tree: RbTree<K, V>, key: K, comparator: Comparator<K>): RbNode<K, V> | undefined {
+export function rbFind<K, V>(tree: RbTree<K, V>, key: K, comparator: RbComparator<K>): RbNode<K, V> | undefined {
   if (tree === null) {
     return undefined;
   }
