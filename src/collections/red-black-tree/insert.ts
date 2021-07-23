@@ -1,9 +1,9 @@
-import { Color, Comparator, RbNode, RbTree } from "./tree.js";
+import { Color, Comparator, KeyValue, RbNode, RbTree } from "./tree.js";
 
-export function rbInsert<T>(
-  tree: RbTree<T>, value: T, comparator: Comparator<T>): RbTree<T> {
+export function rbInsert<K, V>(
+  tree: RbTree<K, V>, keyValue: KeyValue<K, V>, comparator: Comparator<K>): RbTree<K, V> {
   const resultWithPossibleTopLevelRedViolation =
-    insertWithPossibleTopLevelRedViolation(tree, value, comparator);
+    insertWithPossibleTopLevelRedViolation(tree, keyValue, comparator);
 
   // Paint the top level black, resolving any top-level red violation.
   // This mechanism allows the black depth of the tree to be increased
@@ -14,8 +14,8 @@ export function rbInsert<T>(
   };
 }
 
-function insertWithPossibleTopLevelRedViolation<T>(
-  tree: RbTree<T>, value: T, comparator: Comparator<T>): RbNode<T> {
+function insertWithPossibleTopLevelRedViolation<K, V>(
+  tree: RbTree<K, V>, keyValue: KeyValue<K, V>, comparator: Comparator<K>): RbNode<K, V> {
   // The tree returned by this function may include a red violation. This
   // must be resolved by the caller.
 
@@ -28,7 +28,7 @@ function insertWithPossibleTopLevelRedViolation<T>(
       color: Color.R,
       tombstone: false,
       left: null,
-      value,
+      keyValue,
       right: null,
     }
   }
@@ -37,20 +37,20 @@ function insertWithPossibleTopLevelRedViolation<T>(
   let comparison;
   // Check if the value is a tombstone.
   if (tree.tombstone) {
-    const maxLeft = maxValue(tree.left, comparator);
-    const minRight = minValue(tree.right, comparator);
+    const maxLeft = maxKey(tree.left, comparator);
+    const minRight = minKey(tree.right, comparator);
     // Value is a tombstone - replace it if this is the right place in the
     // tree for the new value.
     comparison =
       // Recurse to left if the value is lte max of left.
-      maxLeft !== undefined && comparator(value, maxLeft.value) <= 0 ? -1 :
+      maxLeft !== undefined && comparator(keyValue.key, maxLeft.key) <= 0 ? -1 :
       // Recurse to the right if the value is gte min of right.
-        minRight !== undefined && comparator(value, minRight.value) >= 0 ? 1 :
+        minRight !== undefined && comparator(keyValue.key, minRight.key) >= 0 ? 1 :
           // Else the current node is the best place to insert.
           0;
   } else {
     // Not a tombstone - choose subtree based on value in node.
-    comparison = comparator(value, tree.value);
+    comparison = comparator(keyValue.key, tree.keyValue.key);
   }
 
   if (comparison === 0) {
@@ -59,24 +59,24 @@ function insertWithPossibleTopLevelRedViolation<T>(
     return {
       ...tree,
       tombstone: false,
-      value,
+      keyValue,
     };
   } else if (comparison < 0) {
     // Insert in left subtree.
     return balanceWithPossibleTopLevelRedViolation({
       ...tree,
-      left: insertWithPossibleTopLevelRedViolation(tree.left, value, comparator),
+      left: insertWithPossibleTopLevelRedViolation(tree.left, keyValue, comparator),
     });
   } else {
     // Insert in right subtree.
     return balanceWithPossibleTopLevelRedViolation({
       ...tree,
-      right: insertWithPossibleTopLevelRedViolation(tree.right, value, comparator),
+      right: insertWithPossibleTopLevelRedViolation(tree.right, keyValue, comparator),
     });
   }
 }
 
-function balanceWithPossibleTopLevelRedViolation<T>(tree: RbNode<T>): RbNode<T> {
+function balanceWithPossibleTopLevelRedViolation<K, V>(tree: RbNode<K, V>): RbNode<K, V> {
   // TODO: Is this necessary? I don't think it should ever happen, that the root is
   // red but we have doubled red children, but if it did, is this the right
   // behaviour?
@@ -162,32 +162,32 @@ function balanceWithPossibleTopLevelRedViolation<T>(tree: RbNode<T>): RbNode<T> 
   return tree;
 }
 
-type Value<T> = { value: T };
+type KeyResult<K> = { key: K };
 
-function minValue<T>(tree: RbTree<T>, comparator: Comparator<T>): Value<T> | undefined {
+function minKey<K, V>(tree: RbTree<K, V>, comparator: Comparator<K>): KeyResult<K> | undefined {
   if (tree === null) {
     return undefined;
   }
 
   // Due to the possible presence of tombstones, we may need to scan other options
   // than just the left subtree.
-  return minValue(tree.left, comparator) ??
-    rootValue(tree) ??
-    minValue(tree.right, comparator);
+  return minKey(tree.left, comparator) ??
+    rootKey(tree) ??
+    minKey(tree.right, comparator);
 }
 
-function maxValue<T>(tree: RbTree<T>, comparator: Comparator<T>): Value<T> | undefined {
+function maxKey<K, V>(tree: RbTree<K, V>, comparator: Comparator<K>): KeyResult<K> | undefined {
   if (tree === null) {
     return undefined;
   }
 
   // Due to the possible presence of tombstones, we may need to scan other options
   // than just the right subtree.
-  return maxValue(tree.right, comparator) ??
-    rootValue(tree) ??
-    maxValue(tree.left, comparator);
+  return maxKey(tree.right, comparator) ??
+    rootKey(tree) ??
+    maxKey(tree.left, comparator);
 }
 
-function rootValue<T>(node: RbNode<T>): Value<T> | undefined {
-  return node.tombstone ? undefined : { value: node.value };
+function rootKey<K, V>(node: RbNode<K, V>): KeyResult<K> | undefined {
+  return node.tombstone ? undefined : { key: node.keyValue.key };
 }

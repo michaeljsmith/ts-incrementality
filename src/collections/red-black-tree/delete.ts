@@ -8,18 +8,18 @@
 
 import { Comparator, RbNode, RbTree } from "./tree.js";
 
-export function rbDelete<T>(tree: RbTree<T>, value: T, comparator: Comparator<T>): RbTree<T> {
+export function rbDelete<K, V>(tree: RbTree<K, V>, key: K, comparator: Comparator<K>): RbTree<K, V> {
   if (tree === null) {
-    throw `item '${value}' not found in tree.`;
+    throw `item '${key}' not found in tree.`;
   }
 
   // Check which way to recurse.
-  const comparison = comparator(value, tree.value);
+  const comparison = comparator(key, tree.keyValue.key);
   if (comparison == 0) {
     // We have found the node to delete.
     // Check whether it is a tombstone, otherwise delete it.
     if (tree.tombstone) {
-      throw `item '${value}' is already deleted.`;
+      throw `item '${key}' is already deleted.`;
     }
 
     return {
@@ -30,13 +30,13 @@ export function rbDelete<T>(tree: RbTree<T>, value: T, comparator: Comparator<T>
     // Recurse to the left.
     return {
       ...tree,
-      left: rbDelete(tree.left, value, comparator),
+      left: rbDelete(tree.left, key, comparator),
     };
   } else {
     // Recurse to the right.
     return {
       ...tree,
-      right: rbDelete(tree.right, value, comparator),
+      right: rbDelete(tree.right, key, comparator),
     }
   }
 }

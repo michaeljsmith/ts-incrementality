@@ -6,12 +6,12 @@ function compare(a: string, b: string) {
   return a < b ? -1 : (a > b ? 1 : 0);
 }
 
-function node<T>(color: Color, left: RbTree<T>, value: T, right: RbTree<T>) {
-  return {color, tombstone: false, left, value, right};
+function node<K>(color: Color, left: RbTree<K, void>, key: K, right: RbTree<K, void>): RbTree<K, void> {
+  return {color, tombstone: false, left, keyValue: {key, value: undefined}, right};
 }
 
-function tombstone<T>(color: Color, left: RbTree<T>, value: T, right: RbTree<T>) {
-  return {color, tombstone: true, left, value, right};
+function tombstone<K>(color: Color, left: RbTree<K, void>, key: K, right: RbTree<K, void>): RbTree<K, void> {
+  return {color, tombstone: true, left, keyValue: {key, value: undefined}, right};
 }
 
 describe('red-black-tree', function() {
