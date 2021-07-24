@@ -9,7 +9,8 @@ function node(
   return {
     left,
     key: key,
-    output: 1,
+    nodeOutput: 1,
+    treeOutput: 1,
     right,
   } as MapReduceCacheNode<string, void, number>;
 }

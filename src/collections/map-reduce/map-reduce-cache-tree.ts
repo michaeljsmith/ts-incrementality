@@ -8,7 +8,8 @@ export type MapReduceCacheNode<K, V, O> = {
   left: MapReduceCacheTree<K, V, O>,
   key: K,
   inputTree: Collection<K, V>,
-  output: O,
+  nodeOutput: O,
+  treeOutput: O,
   right: MapReduceCacheTree<K, V, O>,
 };
 
