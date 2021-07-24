@@ -1,18 +1,25 @@
 import { Cache } from "../../cache.js";
+import { Collection } from "../collection.js";
 import { RbComparator } from "../red-black-tree/tree.js";
 
-export type MapReduceCacheNode<K, O> = {
-  cache: Cache;
+export type MapReduceCacheNode<K, V, O> = {
+  cache: Cache,
 
-  left: MapReduceCacheTree<K, O>;
-  key: K;
-  output: O;
-  right: MapReduceCacheTree<K, O>;
+  left: MapReduceCacheTree<K, V, O>,
+  key: K,
+  inputTree: Collection<K, V>,
+  output: O,
+  right: MapReduceCacheTree<K, V, O>,
 };
 
-export type MapReduceCacheTree<K, O> = MapReduceCacheNode<K, O> | null;
+export type MapReduceCacheTree<K, V, O> = MapReduceCacheNode<K, V, O> | null;
 
-export function find<K, O>(tree: MapReduceCacheTree<K, O>, key: K, comparator: RbComparator<K>): MapReduceCacheNode<K, O> | undefined {
+export function find<K, V, O>(
+    tree: MapReduceCacheTree<K, V, O>,
+    key: K,
+    comparator: RbComparator<K>)
+: MapReduceCacheNode<K, V, O> | undefined {
+
   if (tree === null) {
     return undefined;
   }

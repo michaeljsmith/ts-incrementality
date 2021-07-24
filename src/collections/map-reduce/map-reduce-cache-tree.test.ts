@@ -2,16 +2,16 @@ import { expect } from "chai";
 import { find, MapReduceCacheNode, MapReduceCacheTree } from "./map-reduce-cache-tree.js";
 
 function node(
-    left: MapReduceCacheTree<string, number>,
+    left: MapReduceCacheTree<string, void, number>,
     key: string,
-    right: MapReduceCacheTree<string, number>)
-: MapReduceCacheNode<string, number> {
+    right: MapReduceCacheTree<string, void, number>)
+: MapReduceCacheNode<string, void, number> {
   return {
     left,
     key: key,
     output: 1,
     right,
-  } as MapReduceCacheNode<string, number>;
+  } as MapReduceCacheNode<string, void, number>;
 }
 
 function compare(a: string, b: string) {
