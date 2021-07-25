@@ -45,6 +45,8 @@ export function incremental<T, Args extends [unknown]>(
     entry.cache.incrementVisitKey();
 
     const result = fn(entry.cache)(...args);
+    // TODO: Consider doing one-level deep equality testing to see if the result is
+    // unchanged - this could significantly reduce the amount of propagation.
     entry.memoization.previousResult = result;
     return result;
   };

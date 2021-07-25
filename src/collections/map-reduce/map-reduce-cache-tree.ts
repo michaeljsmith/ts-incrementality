@@ -1,15 +1,16 @@
-import { Cache } from "../../cache.js";
 import { Collection } from "../collection.js";
 import { RbComparator } from "../red-black-tree/tree.js";
 
 export type MapReduceCacheNode<K, V, O> = {
-  cache: Cache,
+  mapCache?: unknown,
+  reduceCacheLeft?: unknown,
+  reduceCacheRight?: unknown,
 
   left: MapReduceCacheTree<K, V, O>,
   key: K,
   inputTree: Collection<K, V>,
-  nodeOutput: O,
-  treeOutput: O,
+  nodeOutput: O | undefined,
+  treeOutput: O | undefined,
   right: MapReduceCacheTree<K, V, O>,
 };
 

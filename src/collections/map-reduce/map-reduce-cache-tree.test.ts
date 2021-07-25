@@ -9,10 +9,11 @@ function node(
   return {
     left,
     key: key,
+    inputTree: null,
     nodeOutput: 1,
     treeOutput: 1,
     right,
-  } as MapReduceCacheNode<string, void, number>;
+  };
 }
 
 function compare(a: string, b: string) {
