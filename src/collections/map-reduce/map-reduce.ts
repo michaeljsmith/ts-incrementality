@@ -1,5 +1,5 @@
-import { CacheReference } from "@/cache.js";
-import { Collection, KeyValue } from "../collection.js";
+import { Cache, CacheReference, newCache } from "../../cache.js";
+import { Collection } from "../collection.js";
 import { RbComparator } from "../red-black-tree/tree.js";
 import { find, MapReduceCacheNode, MapReduceCacheTree } from "./map-reduce-cache-tree.js";
 
@@ -7,8 +7,8 @@ type MapReduceCacheEntry<K, V, O> = {
   cacheTree: MapReduceCacheTree<K, V, O>;
 };
 
-type Mapper<K, V, O> = (cacheReference: CacheReference, inputKey: K, inputValue: V) => O;
-type Reducer<O> = (cacheReference: CacheReference, left: O, right: O) => O;
+type Mapper<K, V, O> = (cache: Cache, inputKey: K, inputValue: V) => O;
+type Reducer<O> = (cache: Cache, left: O, right: O) => O;
 
 export function mapReduce<K, V, O>(
     cacheReference: CacheReference,
@@ -38,7 +38,7 @@ type RecursionParameters<K, V, O> = {
   previousCacheTree: MapReduceCacheTree<K, V, O>,
 };
 
-export function mapReduceRecurse<K, V, O>(
+function mapReduceRecurse<K, V, O>(
     inputTree: Collection<K, V>,
     params: RecursionParameters<K, V, O>)
 : MapReduceCacheTree<K, V, O> {
@@ -71,7 +71,7 @@ export function mapReduceRecurse<K, V, O>(
   // unchanged - this could significantly reduce the amount of propagation.
   cacheNode.nodeOutput = inputTree.tombstone ? undefined :
     params.mapper(
-      cacheReference(cacheNode, 'mapCache'),
+      referencedCache(cacheNode, 'mapCache'),
       inputTree.keyValue.key,
       inputTree.keyValue.value);
 
@@ -83,13 +83,13 @@ export function mapReduceRecurse<K, V, O>(
   // TODO: Consider doing one-level deep equality testing to see if the result is
   // unchanged - this could significantly reduce the amount of propagation.
   const leftReduction = maybeReduce(
-    cacheReference(cacheNode, 'reduceCacheLeft'),
+    referencedCache(cacheNode, 'reduceCacheLeft'),
     params.reducer,
     cacheNode.left?.treeOutput,
     cacheNode.nodeOutput);
 
   cacheNode.treeOutput = maybeReduce(
-    cacheReference(cacheNode, 'reduceCacheRight'),
+    referencedCache(cacheNode, 'reduceCacheRight'),
     params.reducer,
     leftReduction,
     cacheNode.right?.treeOutput);
@@ -98,27 +98,24 @@ export function mapReduceRecurse<K, V, O>(
 }
 
 function maybeReduce<O>(
-  cacheReference: CacheReference,
+  cache: Cache,
   reducer: Reducer<O>,
   left: O | undefined,
   right: O | undefined)
 : O | undefined {
   return left === undefined ? right :
     right === undefined ? left :
-    reducer(cacheReference, left, right);
+    reducer(cache, left, right);
 }
 
-function cacheReference<K, V, O>(
+function referencedCache<K, V, O>(
     cacheNode: Partial<MapReduceCacheNode<K, V, O>>,
     cacheKey: 'mapCache' | 'reduceCacheLeft' | 'reduceCacheRight')
-: CacheReference {
-  return {
-    getOrCreate<T>(init: () => T) {
-      if (cacheNode[cacheKey] === undefined) {
-        cacheNode[cacheKey] = init();
-      }
-
-      return cacheNode[cacheKey] as T;
-    },
-  };
+: Cache {
+  if (cacheNode[cacheKey] === undefined) {
+    cacheNode[cacheKey] = newCache();
+  } else {
+    (cacheNode[cacheKey] as Cache).incrementVisitKey();
+  }
+  return cacheNode[cacheKey] as Cache;
 }

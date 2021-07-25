@@ -1,6 +1,5 @@
-import { CacheReference } from "../../cache.js";
+import { Cache, CacheReference } from "../../cache.js";
 import { expect } from "chai";
-import { KeyValue } from "../collection.js";
 import { mapReduce } from "./map-reduce.js";
 import { testing } from "../red-black-tree/index.js";
 
@@ -8,7 +7,7 @@ function compare(a: string, b: string) {
   return a < b ? -1 : (a > b ? 1 : 0);
 }
 
-type Cache<T, Args> = {
+type CacheEntry<T, Args> = {
   args?: Args,
   value?: T,
 };
@@ -17,9 +16,9 @@ function argsEqual<Args extends unknown[]>(left: Args, right: Args) {
   return left.every((x, i) => x === right[i]);
 }
 
-function cache<T, Args extends unknown[]>(
-    cacheReference: CacheReference, args: Args, evaluate: () => T): T {
-  const cache = cacheReference.getOrCreate(() => ({} as Cache<T, Args>));
+function cached<T, Args extends unknown[]>(
+    parentCache: Cache, args: Args, evaluate: () => T): T {
+  const cache = parentCache('root').getOrCreate(() => ({} as CacheEntry<T, Args>));
 
   if (cache.args !== undefined && cache.value !== undefined) {
     if (argsEqual(cache.args, args)) {
@@ -34,16 +33,16 @@ function cache<T, Args extends unknown[]>(
 }
 
 let mapCount = 0;
-function map(cacheReference: CacheReference, inputKey: string, inputValue: number): number[] {
-  return cache(cacheReference, [inputKey, inputValue], () => {
+function map(cache: Cache, inputKey: string, inputValue: number): number[] {
+  return cached(cache, [inputKey, inputValue], () => {
     ++mapCount;
     return [inputValue];
   });
 }
 
 let reduceCount = 0;
-function reduce(cacheReference: CacheReference, left: number[], right: number[]): number[] {
-  return cache(cacheReference, [left, right], () => {
+function reduce(cache: Cache, left: number[], right: number[]): number[] {
+  return cached(cache, [left, right], () => {
     ++reduceCount;
     return left.concat(right);
   });
@@ -177,7 +176,7 @@ describe('map-reduce', function() {
 
   it('caches reduce', function() {
     const mapResult: number[] = [];
-    function mapToEmptyList(cacheReference: CacheReference, key: string, value: number) {
+    function mapToEmptyList(cache: Cache, key: string, value: number) {
       return mapResult;
     }
 
