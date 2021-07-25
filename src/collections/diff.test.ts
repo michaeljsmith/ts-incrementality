@@ -120,4 +120,23 @@ describe('diff', function() {
       key: 'b',
     }]);
   });
+
+  it('finds multiple diffs', function() {
+    const orig = testing.node(
+      testing.node(null, {key: 'a', value: 1}, null),
+      {key: 'b', value: 2},
+      null);
+    const dest = testing.node(
+      null,
+      {key: 'b', value: 2},
+      testing.node(null, {key: 'c', value: 3}, null));
+    expect([...diff(orig, dest, compare)]).deep.equals([{
+      diffType: 'deletion',
+      key: 'a',
+    }, {
+      diffType: 'insertion',
+      key: 'c',
+      value: 3,
+    }]);
+  });
 });
