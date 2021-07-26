@@ -40,6 +40,8 @@ export function searchGeneralNode<K, V, N extends SearchNode<K, V>>(
     keyValue: KeyValue<K, V>,
     right: N | null,
     tombstone: boolean) {
+  checkKeyRanges<K, V, N>(left, keyValue.key, right);
+
   return {
     tombstone,
     keyRange: keyRangeFor<K, V, N>(comparator, left, keyValue.key, right),
@@ -50,6 +52,7 @@ export function searchGeneralNode<K, V, N extends SearchNode<K, V>>(
 }
 
 export function searchNodeFrom<K, V, N extends SearchNode<K, V>>(comparator: Comparator<K>, node: Omit<N, 'keyRange'>) {
+  checkKeyRanges(node.left, node.keyValue.key, node.right);
   return {
     ...node,
     keyRange: keyRangeFor(comparator, node.left, node.keyValue.key, node.right),
@@ -61,4 +64,13 @@ function keyRangeFor<K, V, N extends SearchNode<K, V>>(comparator: Comparator<K>
   keyRange = left === null ? keyRange : keyRangeEnclosing(comparator, keyRange, left.keyRange);
   keyRange = right === null ? keyRange : keyRangeEnclosing(comparator, keyRange, right.keyRange);
   return keyRange;
+}
+
+function checkKeyRanges<K, V, N extends SearchNode<K, V>>(left: N | null, key: K, right: N | null) {
+  if (left !== null && left.keyRange.max >= key) {
+    throw 'left range invalid';
+  }
+  if (right !== null && right.keyRange.min <= key) {
+    throw 'right range invalid';
+  }
 }
