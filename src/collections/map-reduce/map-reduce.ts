@@ -1,6 +1,6 @@
 import { Cache, CacheReference, newCache } from "../../cache.js";
 import { Collection } from "../collection.js";
-import { Comparator } from "../search-tree/index.js";
+import { Comparator } from "../../comparison.js";
 import { find, MapReduceCacheNode, MapReduceCacheTree } from "./map-reduce-cache-tree.js";
 
 type MapReduceCacheEntry<K, V, O> = {

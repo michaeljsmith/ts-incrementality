@@ -12,4 +12,4 @@ export interface SearchNode<K, V> {
 
 export type SearchTree<K, V> = SearchNode<K, V> | null;
 
-export type Comparator<T> = (a: T, b: T) => number;
+

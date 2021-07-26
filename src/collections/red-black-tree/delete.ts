@@ -6,7 +6,7 @@
 //
 // [1]: https://matt.might.net/papers/germane2014deletion.pdf
 
-import { Comparator } from "../search-tree/index.js";
+import { Comparator } from "../../comparison.js";
 import { RbTree } from "./tree.js";
 
 export function rbDelete<K, V>(tree: RbTree<K, V>, key: K, comparator: Comparator<K>): RbTree<K, V> {

@@ -1,4 +1,5 @@
-import { Comparator, find, SearchTree } from "./search-tree/index.js";
+import { Comparator } from "../comparison.js";
+import { find, SearchTree } from "./search-tree/index.js";
 
 export type Insertion<K, V> = {
   diffType: 'insertion',

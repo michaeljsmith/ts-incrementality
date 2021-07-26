@@ -1,5 +1,5 @@
 import { Collection } from "../collection.js";
-import { Comparator } from "../search-tree/index.js";
+import { Comparator } from "../../comparison.js";
 
 export type MapReduceCacheNode<K, V, O> = {
   mapCache?: unknown,

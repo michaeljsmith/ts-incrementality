@@ -1,4 +1,5 @@
-import { KeyValue, Comparator } from "../search-tree/index.js";
+import { Comparator } from "../../comparison.js";
+import { KeyValue } from "../search-tree/index.js";
 import { Color, RbNode, RbTree } from "./tree.js";
 
 export function rbInsert<K, V>(

@@ -2,10 +2,7 @@ import { Cache, CacheReference } from "../../cache.js";
 import { expect } from "chai";
 import { mapReduce } from "./map-reduce.js";
 import { testing } from "../red-black-tree/index.js";
-
-function compare(a: string, b: string) {
-  return a < b ? -1 : (a > b ? 1 : 0);
-}
+import { natural as compare } from "../../comparison.js";
 
 type CacheEntry<T, Args> = {
   args?: Args,
@@ -71,12 +68,12 @@ describe('map-reduce', function() {
   });
 
   it('returns undefined for empty tree', function() {
-    expect(mapReduce(cacheReference, null, compare, map, reduce)).undefined;
+    expect(mapReduce(cacheReference, null, compare(), map, reduce)).undefined;
   });
 
   it('maps singleton', function() {
     const tree = testing.node(null, {key: 'a', value: 1}, null);
-    expect(mapReduce(cacheReference, tree, compare, map, reduce)).deep.equals([1]);
+    expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1]);
   });
 
   it('reduces with left child', function() {
@@ -84,7 +81,7 @@ describe('map-reduce', function() {
       testing.node(null, {key: 'a', value: 1}, null),
       {key: 'b', value: 2},
       null);
-    expect(mapReduce(cacheReference, tree, compare, map, reduce)).deep.equals([1, 2]);
+    expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 2]);
   });
 
   it('reduces with right child', function() {
@@ -92,7 +89,7 @@ describe('map-reduce', function() {
       null,
       {key: 'a', value: 1},
       testing.node(null, {key: 'b', value: 2}, null));
-    expect(mapReduce(cacheReference, tree, compare, map, reduce)).deep.equals([1, 2]);
+    expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 2]);
   });
 
   it('reduces with both children', function() {
@@ -100,12 +97,12 @@ describe('map-reduce', function() {
       testing.node(null, {key: 'a', value: 1}, null),
       {key: 'b', value: 2},
       testing.node(null, {key: 'c', value: 3}, null));
-    expect(mapReduce(cacheReference, tree, compare, map, reduce)).deep.equals([1, 2, 3]);
+    expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 2, 3]);
   });
 
   it('ignores singleton tombstone', function() {
     const tree = testing.tombstone(null, {key: 'a', value: 1}, null);
-    expect(mapReduce(cacheReference, tree, compare, map, reduce)).undefined;
+    expect(mapReduce(cacheReference, tree, compare(), map, reduce)).undefined;
   });
 
   it('ignores tombstone when reducing', function() {
@@ -113,7 +110,7 @@ describe('map-reduce', function() {
       testing.node(null, {key: 'a', value: 1}, null),
       {key: 'b', value: 2},
       testing.node(null, {key: 'c', value: 3}, null));
-    expect(mapReduce(cacheReference, tree, compare, map, reduce)).deep.equals([1, 3]);
+    expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 3]);
   });
 
   it('caches tree', function() {
@@ -121,21 +118,21 @@ describe('map-reduce', function() {
       testing.node(null, {key: 'a', value: 1}, null),
       {key: 'b', value: 2},
       null);
-    mapReduce(cacheReference, tree, compare, map, reduce);
+    mapReduce(cacheReference, tree, compare(), map, reduce);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
-    mapReduce(cacheReference, tree, compare, map, reduce);
+    mapReduce(cacheReference, tree, compare(), map, reduce);
     expect(mapCount).equals(2);
   });
 
   it('re-evaluates tree', function() {
     const child = testing.node(null, { key: 'a', value: 1 }, null);
     const tree1 = testing.node(child, {key: 'b', value: 2}, null);
-    mapReduce(cacheReference, tree1, compare, map, reduce);
+    mapReduce(cacheReference, tree1, compare(), map, reduce);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
     const tree2 = testing.node(child, {key: 'b', value: 3}, null);
-    expect(mapReduce(cacheReference, tree2, compare, map, reduce)).deep.equals([1, 3]);
+    expect(mapReduce(cacheReference, tree2, compare(), map, reduce)).deep.equals([1, 3]);
     expect(mapCount).equals(3);
     expect(reduceCount).equals(2);
   });
@@ -143,11 +140,11 @@ describe('map-reduce', function() {
   it('re-evaluates after deletion', function() {
     const child = testing.node(null, { key: 'a', value: 1 }, null);
     const tree1 = testing.node(child, {key: 'b', value: 2}, null);
-    mapReduce(cacheReference, tree1, compare, map, reduce);
+    mapReduce(cacheReference, tree1, compare(), map, reduce);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
     const tree2 = child;
-    expect(mapReduce(cacheReference, tree2, compare, map, reduce)).deep.equals([1]);
+    expect(mapReduce(cacheReference, tree2, compare(), map, reduce)).deep.equals([1]);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
   });
@@ -155,11 +152,11 @@ describe('map-reduce', function() {
   it('re-evaluates after tombstone', function() {
     const child = testing.node(null, { key: 'a', value: 1 }, null);
     const tree1 = testing.node(child, {key: 'b', value: 2}, null);
-    mapReduce(cacheReference, tree1, compare, map, reduce);
+    mapReduce(cacheReference, tree1, compare(), map, reduce);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
     const tree2 = testing.tombstone(child, {key: 'b', value: 3}, null);
-    expect(mapReduce(cacheReference, tree2, compare, map, reduce)).deep.equals([1]);
+    expect(mapReduce(cacheReference, tree2, compare(), map, reduce)).deep.equals([1]);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
   });
@@ -167,10 +164,10 @@ describe('map-reduce', function() {
   it('caches map', function() {
     const keyValue = { key: 'a', value: 1 };
     const tree1 = testing.node(null, keyValue, null);
-    mapReduce(cacheReference, tree1, compare, map, reduce);
+    mapReduce(cacheReference, tree1, compare(), map, reduce);
     expect(mapCount).equals(1);
     const tree2 = testing.node(null, keyValue, null);
-    mapReduce(cacheReference, tree2, compare, map, reduce);
+    mapReduce(cacheReference, tree2, compare(), map, reduce);
     expect(mapCount).equals(1);
   });
 
@@ -182,10 +179,10 @@ describe('map-reduce', function() {
 
     const child = testing.node(null, { key: 'a', value: 1 }, null);
     const tree1 = testing.node(child, { key: 'b', value: 2 }, null);
-    mapReduce(cacheReference, tree1, compare, mapToEmptyList, reduce);
+    mapReduce(cacheReference, tree1, compare(), mapToEmptyList, reduce);
     expect(reduceCount).equals(1);
     const tree2 = testing.node(child, { key: 'b', value: 3 }, null);
-    mapReduce(cacheReference, tree2, compare, mapToEmptyList, reduce);
+    mapReduce(cacheReference, tree2, compare(), mapToEmptyList, reduce);
     expect(reduceCount).equals(1);
   });
 });

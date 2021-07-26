@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { find, MapReduceCacheNode, MapReduceCacheTree } from "./map-reduce-cache-tree.js";
+import { natural as compare } from "../../comparison.js";
 
 function node(
     left: MapReduceCacheTree<string, void, number>,
@@ -16,19 +17,15 @@ function node(
   };
 }
 
-function compare(a: string, b: string) {
-  return a < b ? -1 : (a > b ? 1 : 0);
-}
-
 describe('map-reduce-cache-tree', function() {
   describe('find', function() {
     it('returns undefined for empty tree', function() {
-      expect(find(null, 'a', compare)).undefined;
+      expect(find(null, 'a', compare())).undefined;
     });
 
     it('returns undefined when item missing', function() {
       const origin = node(null, 'a', null);
-      expect(find(origin, 'b', compare)).undefined;
+      expect(find(origin, 'b', compare())).undefined;
     });
 
     it('finds in singleton', function() {
@@ -36,7 +33,7 @@ describe('map-reduce-cache-tree', function() {
         null,
         'a',
         null);
-      expect(find(origin, 'a', compare)).deep.equals(
+      expect(find(origin, 'a', compare())).deep.equals(
         node(null, 'a', null));
     });
 
@@ -45,7 +42,7 @@ describe('map-reduce-cache-tree', function() {
         node(null, 'a', null),
         'b',
         null);
-      expect(find(origin, 'a', compare)).deep.equals(
+      expect(find(origin, 'a', compare())).deep.equals(
         node(null, 'a', null));
     });
 
@@ -54,7 +51,7 @@ describe('map-reduce-cache-tree', function() {
         null,
         'a',
         node(null, 'b', null));
-      expect(find(origin, 'b', compare)).deep.equals(
+      expect(find(origin, 'b', compare())).deep.equals(
         node(null, 'b', null));
     });
   });

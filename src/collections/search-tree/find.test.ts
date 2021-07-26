@@ -1,10 +1,7 @@
 import { expect } from "chai";
 import { SearchTree } from "../search-tree/index.js";
 import { find } from "./find.js";
-
-function compare(a: string, b: string) {
-  return a < b ? -1 : (a > b ? 1 : 0);
-}
+import { natural as compare } from "../../comparison.js";
 
 function node<K>(left: SearchTree<K, void>, key: K, right: SearchTree<K, void>): SearchTree<K, void> {
   return {tombstone: false, left, keyValue: {key, value: undefined}, right};
@@ -17,17 +14,17 @@ function tombstone<K>(left: SearchTree<K, void>, key: K, right: SearchTree<K, vo
 describe('red-black-tree', function() {
   describe('find', function() {
     it('returns undefined in empty tree', function() {
-      expect(find(null, 'a', compare)).undefined;
+      expect(find(null, 'a', compare())).undefined;
     });
 
     it('returns undefined when item missing', function() {
       const tree = node(null, 'a', null);
-      expect(find(null, 'b', compare)).undefined;
+      expect(find(null, 'b', compare())).undefined;
     });
 
     it('returns tombstone', function() {
       const tree = tombstone(null, 'a', null);
-      expect(find(tree, 'a', compare)).deep.equals(
+      expect(find(tree, 'a', compare())).deep.equals(
         tombstone(null, 'a', null));
     })
 
@@ -36,13 +33,13 @@ describe('red-black-tree', function() {
         node(null, 'a', null),
         'b',
         null);
-      expect(find(tree, 'a', compare)).deep.equals(
+      expect(find(tree, 'a', compare())).deep.equals(
         node(null, 'a', null));
     })
 
     it('finds singleton', function() {
       const tree = node(null, 'a', null);
-      expect(find(tree, 'a', compare)).deep.equals(
+      expect(find(tree, 'a', compare())).deep.equals(
         node(null, 'a', null));
     })
 
@@ -51,7 +48,7 @@ describe('red-black-tree', function() {
         null,
         'a',
         node(null, 'b', null));
-      expect(find(tree, 'b', compare)).deep.equals(
+      expect(find(tree, 'b', compare())).deep.equals(
         node(null, 'b', null));
     })
 
@@ -60,7 +57,7 @@ describe('red-black-tree', function() {
         null,
         'a',
         node(null, 'b', null));
-      expect(find(tree, 'b', compare)).deep.equals(
+      expect(find(tree, 'b', compare())).deep.equals(
         node(null, 'b', null));
     })
   });

@@ -1,4 +1,5 @@
-import { Comparator, SearchNode, SearchTree } from "../search-tree/index.js";
+import { SearchNode, SearchTree } from "../search-tree/index.js";
+import { Comparator } from "../../comparison.js";
 
 export function find<K, V>(tree: SearchTree<K, V>, key: K, comparator: Comparator<K>): SearchNode<K, V> | undefined {
   if (tree === null) {
