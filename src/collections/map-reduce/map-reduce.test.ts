@@ -2,7 +2,15 @@ import { Cache, CacheReference } from "../../cache.js";
 import { expect } from "chai";
 import { mapReduce } from "./map-reduce.js";
 import { natural as compare } from "../../comparison.js";
-import { searchNode, searchTombstone } from "../search-tree/index.js";
+import { KeyValue, SearchNode, searchNode, searchTombstone, SearchTree } from "../search-tree/index.js";
+
+function node(left: SearchTree<string, number>, keyValue: KeyValue<string, number>, right: SearchTree<string, number>): SearchNode<string, number> {
+  return searchNode(compare(), left, keyValue, right);
+}
+
+function tombstone(left: SearchTree<string, number>, keyValue: KeyValue<string, number>, right: SearchTree<string, number>): SearchNode<string, number> {
+  return searchTombstone(compare(), left, keyValue, right);
+}
 
 type CacheEntry<T, Args> = {
   args?: Args,
@@ -72,50 +80,50 @@ describe('map-reduce', function() {
   });
 
   it('maps singleton', function() {
-    const tree = searchNode(null, {key: 'a', value: 1}, null);
+    const tree = node(null, {key: 'a', value: 1}, null);
     expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1]);
   });
 
   it('reduces with left child', function() {
-    const tree = searchNode(
-      searchNode(null, {key: 'a', value: 1}, null),
+    const tree = node(
+      node(null, {key: 'a', value: 1}, null),
       {key: 'b', value: 2},
       null);
     expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 2]);
   });
 
   it('reduces with right child', function() {
-    const tree = searchNode(
+    const tree = node(
       null,
       {key: 'a', value: 1},
-      searchNode(null, {key: 'b', value: 2}, null));
+      node(null, {key: 'b', value: 2}, null));
     expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 2]);
   });
 
   it('reduces with both children', function() {
-    const tree = searchNode(
-      searchNode(null, {key: 'a', value: 1}, null),
+    const tree = node(
+      node(null, {key: 'a', value: 1}, null),
       {key: 'b', value: 2},
-      searchNode(null, {key: 'c', value: 3}, null));
+      node(null, {key: 'c', value: 3}, null));
     expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 2, 3]);
   });
 
   it('ignores singleton tombstone', function() {
-    const tree = searchTombstone(null, {key: 'a', value: 1}, null);
+    const tree = tombstone(null, {key: 'a', value: 1}, null);
     expect(mapReduce(cacheReference, tree, compare(), map, reduce)).undefined;
   });
 
   it('ignores tombstone when reducing', function() {
-    const tree = searchTombstone(
-      searchNode(null, {key: 'a', value: 1}, null),
+    const tree = tombstone(
+      node(null, {key: 'a', value: 1}, null),
       {key: 'b', value: 2},
-      searchNode(null, {key: 'c', value: 3}, null));
+      node(null, {key: 'c', value: 3}, null));
     expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 3]);
   });
 
   it('caches tree', function() {
-    const tree = searchNode(
-      searchNode(null, {key: 'a', value: 1}, null),
+    const tree = node(
+      node(null, {key: 'a', value: 1}, null),
       {key: 'b', value: 2},
       null);
     mapReduce(cacheReference, tree, compare(), map, reduce);
@@ -126,20 +134,20 @@ describe('map-reduce', function() {
   });
 
   it('re-evaluates tree', function() {
-    const child = searchNode(null, { key: 'a', value: 1 }, null);
-    const tree1 = searchNode(child, {key: 'b', value: 2}, null);
+    const child = node(null, { key: 'a', value: 1 }, null);
+    const tree1 = node(child, {key: 'b', value: 2}, null);
     mapReduce(cacheReference, tree1, compare(), map, reduce);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
-    const tree2 = searchNode(child, {key: 'b', value: 3}, null);
+    const tree2 = node(child, {key: 'b', value: 3}, null);
     expect(mapReduce(cacheReference, tree2, compare(), map, reduce)).deep.equals([1, 3]);
     expect(mapCount).equals(3);
     expect(reduceCount).equals(2);
   });
 
   it('re-evaluates after deletion', function() {
-    const child = searchNode(null, { key: 'a', value: 1 }, null);
-    const tree1 = searchNode(child, {key: 'b', value: 2}, null);
+    const child = node(null, { key: 'a', value: 1 }, null);
+    const tree1 = node(child, {key: 'b', value: 2}, null);
     mapReduce(cacheReference, tree1, compare(), map, reduce);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
@@ -150,12 +158,12 @@ describe('map-reduce', function() {
   });
 
   it('re-evaluates after tombstone', function() {
-    const child = searchNode(null, { key: 'a', value: 1 }, null);
-    const tree1 = searchNode(child, {key: 'b', value: 2}, null);
+    const child = node(null, { key: 'a', value: 1 }, null);
+    const tree1 = node(child, {key: 'b', value: 2}, null);
     mapReduce(cacheReference, tree1, compare(), map, reduce);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
-    const tree2 = searchTombstone(child, {key: 'b', value: 3}, null);
+    const tree2 = tombstone(child, {key: 'b', value: 3}, null);
     expect(mapReduce(cacheReference, tree2, compare(), map, reduce)).deep.equals([1]);
     expect(mapCount).equals(2);
     expect(reduceCount).equals(1);
@@ -163,10 +171,10 @@ describe('map-reduce', function() {
 
   it('caches map', function() {
     const keyValue = { key: 'a', value: 1 };
-    const tree1 = searchNode(null, keyValue, null);
+    const tree1 = node(null, keyValue, null);
     mapReduce(cacheReference, tree1, compare(), map, reduce);
     expect(mapCount).equals(1);
-    const tree2 = searchNode(null, keyValue, null);
+    const tree2 = node(null, keyValue, null);
     mapReduce(cacheReference, tree2, compare(), map, reduce);
     expect(mapCount).equals(1);
   });
@@ -177,11 +185,11 @@ describe('map-reduce', function() {
       return mapResult;
     }
 
-    const child = searchNode(null, { key: 'a', value: 1 }, null);
-    const tree1 = searchNode(child, { key: 'b', value: 2 }, null);
+    const child = node(null, { key: 'a', value: 1 }, null);
+    const tree1 = node(child, { key: 'b', value: 2 }, null);
     mapReduce(cacheReference, tree1, compare(), mapToEmptyList, reduce);
     expect(reduceCount).equals(1);
-    const tree2 = searchNode(child, { key: 'b', value: 3 }, null);
+    const tree2 = node(child, { key: 'b', value: 3 }, null);
     mapReduce(cacheReference, tree2, compare(), mapToEmptyList, reduce);
     expect(reduceCount).equals(1);
   });

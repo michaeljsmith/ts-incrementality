@@ -3,12 +3,12 @@ import { rbDelete } from "./delete.js";
 import { Color, rbNode, rbTombstone, RbTree } from "./red-black-tree.js";
 import { natural as compare } from "../../comparison.js";
 
-function node<K>(color: Color, left: RbTree<K, void>, key: K, right: RbTree<K, void>): RbTree<K, void> {
-  return rbNode(color, left, {key, value: undefined}, right);
+function node(color: Color, left: RbTree<string, void>, key: string, right: RbTree<string, void>): RbTree<string, void> {
+  return rbNode(compare(), color, left, {key, value: undefined}, right);
 }
 
-function tombstone<K>(color: Color, left: RbTree<K, void>, key: K, right: RbTree<K, void>): RbTree<K, void> {
-  return rbTombstone(color, left, {key, value: undefined}, right);
+function tombstone(color: Color, left: RbTree<string, void>, key: string, right: RbTree<string, void>): RbTree<string, void> {
+  return rbTombstone(compare(), color, left, {key, value: undefined}, right);
 }
 
 describe('red-black-tree', function() {

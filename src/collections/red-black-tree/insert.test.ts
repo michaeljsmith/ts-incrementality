@@ -4,12 +4,12 @@ import { rbInsert } from "./insert.js";
 import { Color, rbNode, RbNode, rbTombstone, RbTree } from "./red-black-tree.js";
 import { natural as compare } from "../../comparison.js";
 
-function node<K>(color: Color, left: RbTree<K, void>, key: K, right: RbTree<K, void>): RbNode<K, void> {
-  return rbNode(color, left, {key, value: undefined}, right);
+function node(color: Color, left: RbTree<string, void>, key: string, right: RbTree<string, void>): RbNode<string, void> {
+  return rbNode(compare(), color, left, {key, value: undefined}, right);
 }
 
 function tombstone(color: Color, left: RbTree<string, void>, right: RbTree<string, void>): RbNode<string, void> {
-  return rbTombstone(color, left, {key: '', value: undefined}, right);
+  return rbTombstone(compare(), color, left, {key: '', value: undefined}, right);
 }
 
 function keyValue<K>(key: K): KeyValue<K, void> {
@@ -120,33 +120,19 @@ describe('red-black-tree', function() {
     });
 
     it('replaces existing item', function() {
-      const original = {
-        color: Color.B,
-        tombstone: false,
-        left: null,
-        keyValue: {key: 'a', value: 1},
-        right: {
-          color: Color.R,
-          tombstone: false,
-          left: null,
-          keyValue: {key: 'b', value: 1},
-          right: null
-        }
-      };
+      const original = rbNode(
+        compare(),
+        Color.B,
+        null,
+        {key: 'a', value: 1},
+        rbNode(compare(), Color.R, null, {key: 'b', value: 1}, null));
       const final = rbInsert(original, {key: 'b', value: 2}, compare());
-      expect(final).deep.equals({
-        color: Color.B,
-        tombstone: false,
-        left: null,
-        keyValue: {key: 'a', value: 1},
-        right: {
-          color: Color.R,
-          tombstone: false,
-          left: null,
-          keyValue: {key: 'b', value: 2},
-          right: null
-        }
-      });
+      expect(final).deep.equals(rbNode(
+        compare(),
+        Color.B,
+        null,
+        {key: 'a', value: 1},
+        rbNode(compare(), Color.R, null, {key: 'b', value: 2}, null)));
     });
 
     it('replaces singleton tombstone', function() {

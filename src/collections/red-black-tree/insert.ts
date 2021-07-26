@@ -1,6 +1,6 @@
 import { Comparator } from "../../comparison.js";
 import { KeyValue } from "../search-tree/index.js";
-import { Color, RbNode, RbTree } from "./red-black-tree.js";
+import { Color, rbNode, RbNode, rbNodeFrom, RbTree } from "./red-black-tree.js";
 
 export function rbInsert<K, V>(
   tree: RbTree<K, V>, keyValue: KeyValue<K, V>, comparator: Comparator<K>): RbTree<K, V> {
@@ -10,10 +10,10 @@ export function rbInsert<K, V>(
   // Paint the top level black, resolving any top-level red violation.
   // This mechanism allows the black depth of the tree to be increased
   // where necessary.
-  return {
+  return rbNodeFrom(comparator, {
     ...resultWithPossibleTopLevelRedViolation,
     color: Color.B,
-  };
+  });
 }
 
 function insertWithPossibleTopLevelRedViolation<K, V>(
@@ -26,13 +26,7 @@ function insertWithPossibleTopLevelRedViolation<K, V>(
   // violation - if increasing the black depth is necessary then it is the
   // responsibility of the root caller to do so.
   if (tree === null) {
-    return {
-      color: Color.R,
-      tombstone: false,
-      left: null,
-      keyValue,
-      right: null,
-    }
+    return rbNode(comparator, Color.R, null, keyValue, null);
   }
 
   // Check whether the item belongs in the left or right subtree.
@@ -58,27 +52,27 @@ function insertWithPossibleTopLevelRedViolation<K, V>(
   if (comparison === 0) {
     // This is the correct position for the value, but there is already a value
     // here - update it.
-    return {
+    return rbNodeFrom(comparator, {
       ...tree,
       tombstone: false,
       keyValue,
-    };
+    });
   } else if (comparison < 0) {
     // Insert in left subtree.
-    return balanceWithPossibleTopLevelRedViolation({
+    return balanceWithPossibleTopLevelRedViolation(comparator, rbNodeFrom(comparator, {
       ...tree,
       left: insertWithPossibleTopLevelRedViolation(tree.left, keyValue, comparator),
-    });
+    }));
   } else {
     // Insert in right subtree.
-    return balanceWithPossibleTopLevelRedViolation({
+    return balanceWithPossibleTopLevelRedViolation(comparator, rbNodeFrom(comparator, {
       ...tree,
       right: insertWithPossibleTopLevelRedViolation(tree.right, keyValue, comparator),
-    });
+    }));
   }
 }
 
-function balanceWithPossibleTopLevelRedViolation<K, V>(tree: RbNode<K, V>): RbNode<K, V> {
+function balanceWithPossibleTopLevelRedViolation<K, V>(comparator: Comparator<K>, tree: RbNode<K, V>): RbNode<K, V> {
   // TODO: Is this necessary? I don't think it should ever happen, that the root is
   // red but we have doubled red children, but if it did, is this the right
   // behaviour?
@@ -95,70 +89,70 @@ function balanceWithPossibleTopLevelRedViolation<K, V>(tree: RbNode<K, V>): RbNo
     //   Y(R)       =>    X(B)   Z(B)
     //   /  \            /   \  /   \
     // X(R)
-    return {
+    return rbNodeFrom(comparator, {
       ...tree.left,
-      left: {
+      left: rbNodeFrom(comparator, {
         ...tree.left.left,
         color: Color.B,
-      },
-      right: {
+      }),
+      right: rbNodeFrom(comparator, {
         ...tree,
         left: tree.left.right,
-      },
-    };
+      }),
+    });
   } else if (tree.left?.color === Color.R && tree.left.right?.color === Color.R) {
     //       Z(B)            Y(R)
     //      /    \          /    \
     //   X(R)       =>    X(B)   Z(B)
     //   /  \            /   \  /   \
     //      Y(R)
-    return {
+    return rbNodeFrom(comparator, {
       ...tree.left.right,
-      left: {
+      left: rbNodeFrom(comparator, {
         ...tree.left,
         color: Color.B,
         right: tree.left.right.left,
-      },
-      right: {
+      }),
+      right: rbNodeFrom(comparator, {
         ...tree,
         left: tree.left.right.right,
-      },
-    };
+      }),
+    });
   } else if (tree.right?.color === Color.R && tree.right.left?.color === Color.R) {
     //     X(B)               Y(R)
     //     /  \              /    \
     //        Z(R)   =>    X(B)   Z(B)
     //        / \         /   \  /   \
     //      Y(R)
-    return {
+    return rbNodeFrom(comparator, {
       ...tree.right.left,
-      left: {
+      left: rbNodeFrom(comparator, {
         ...tree,
         right: tree.right.left.left,
-      },
-      right: {
+      }),
+      right: rbNodeFrom(comparator, {
         ...tree.right,
         color: Color.B,
         left: tree.right.left.right,
-      },
-    };
+      }),
+    });
   } else if (tree.right?.color === Color.R && tree.right.right?.color === Color.R) {
     //     X(B)               Y(R)
     //     /  \              /    \
     //        Y(R)   =>    X(B)   Z(B)
     //        / \         /   \  /   \
     //          Z(R)
-    return {
+    return rbNodeFrom(comparator, {
       ...tree.right,
-      left: {
+      left: rbNodeFrom(comparator, {
         ...tree,
         right: tree.right.left,
-      },
-      right: {
+      }),
+      right: rbNodeFrom(comparator, {
         ...tree.right.right,
         color: Color.B,
-      }
-    };
+      })
+    });
   }
 
   return tree;

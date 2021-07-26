@@ -2,13 +2,14 @@ import { expect } from "chai";
 import { SearchTree } from "../search-tree/index.js";
 import { find } from "./find.js";
 import { natural as compare } from "../../comparison.js";
+import { searchNode, searchTombstone } from "./search-tree.js";
 
-function node<K>(left: SearchTree<K, void>, key: K, right: SearchTree<K, void>): SearchTree<K, void> {
-  return {tombstone: false, left, keyValue: {key, value: undefined}, right};
+function node(left: SearchTree<string, void>, key: string, right: SearchTree<string, void>): SearchTree<string, void> {
+  return searchNode(compare(), left, {key, value: undefined as void}, right);
 }
 
-function tombstone<K>(left: SearchTree<K, void>, key: K, right: SearchTree<K, void>): SearchTree<K, void> {
-  return {tombstone: true, left, keyValue: {key, value: undefined}, right};
+function tombstone(left: SearchTree<string, void>, key: string, right: SearchTree<string, void>): SearchTree<string, void> {
+  return searchTombstone(compare(), left, {key, value: undefined as void}, right);
 }
 
 describe('red-black-tree', function() {
