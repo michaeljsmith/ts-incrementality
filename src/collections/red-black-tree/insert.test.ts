@@ -1,15 +1,15 @@
 import { expect } from "chai";
 import { KeyValue } from "../search-tree/index.js";
 import { rbInsert } from "./insert.js";
-import { Color, RbNode, RbTree } from "./red-black-tree.js";
+import { Color, rbNode, RbNode, rbTombstone, RbTree } from "./red-black-tree.js";
 import { natural as compare } from "../../comparison.js";
 
 function node<K>(color: Color, left: RbTree<K, void>, key: K, right: RbTree<K, void>): RbNode<K, void> {
-  return {color, tombstone: false, left, keyValue: {key, value: undefined}, right};
+  return rbNode(color, left, {key, value: undefined}, right);
 }
 
 function tombstone(color: Color, left: RbTree<string, void>, right: RbTree<string, void>): RbNode<string, void> {
-  return {color, tombstone: true, left, keyValue: {key: '', value: undefined}, right};
+  return rbTombstone(color, left, {key: '', value: undefined}, right);
 }
 
 function keyValue<K>(key: K): KeyValue<K, void> {

@@ -1,14 +1,14 @@
 import { expect } from "chai";
 import { rbDelete } from "./delete.js";
-import { Color, RbTree } from "./red-black-tree.js";
+import { Color, rbNode, rbTombstone, RbTree } from "./red-black-tree.js";
 import { natural as compare } from "../../comparison.js";
 
 function node<K>(color: Color, left: RbTree<K, void>, key: K, right: RbTree<K, void>): RbTree<K, void> {
-  return {color, tombstone: false, left, keyValue: {key, value: undefined}, right};
+  return rbNode(color, left, {key, value: undefined}, right);
 }
 
 function tombstone<K>(color: Color, left: RbTree<K, void>, key: K, right: RbTree<K, void>): RbTree<K, void> {
-  return {color, tombstone: true, left, keyValue: {key, value: undefined}, right};
+  return rbTombstone(color, left, {key, value: undefined}, right);
 }
 
 describe('red-black-tree', function() {
