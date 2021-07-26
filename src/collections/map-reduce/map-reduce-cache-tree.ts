@@ -1,5 +1,5 @@
 import { Collection } from "../collection.js";
-import { RbComparator } from "../red-black-tree/tree.js";
+import { Comparator } from "../search-tree/index.js";
 
 export type MapReduceCacheNode<K, V, O> = {
   mapCache?: unknown,
@@ -19,7 +19,7 @@ export type MapReduceCacheTree<K, V, O> = MapReduceCacheNode<K, V, O> | null;
 export function find<K, V, O>(
     tree: MapReduceCacheTree<K, V, O>,
     key: K,
-    comparator: RbComparator<K>)
+    comparator: Comparator<K>)
 : MapReduceCacheNode<K, V, O> | undefined {
 
   if (tree === null) {

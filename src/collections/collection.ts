@@ -1,4 +1,3 @@
-import { RBKeyValue, RbTree } from "./red-black-tree/index.js";
+import { SearchTree } from "./search-tree/index.js";
 
-export type KeyValue<K, V> = RBKeyValue<K, V>;
-export type Collection<K, V> = RbTree<K, V>;
+export type Collection<K, V> = SearchTree<K, V>;

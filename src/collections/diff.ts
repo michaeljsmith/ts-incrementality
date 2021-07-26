@@ -1,5 +1,4 @@
-import { rbFind } from "./red-black-tree/find.js";
-import { RbComparator, RbTree } from "./red-black-tree/index.js";
+import { Comparator, find, SearchTree } from "./search-tree/index.js";
 
 export type Insertion<K, V> = {
   diffType: 'insertion',
@@ -21,25 +20,25 @@ export type Update<K, V> = {
 export type Diff<K, V> = Insertion<K, V> | Deletion<K> | Update<K, V>;
 
 export function* diff<K, V>(
-    orig: RbTree<K, V>,
-    dest: RbTree<K, V>,
-    comparator: RbComparator<K>)
+    orig: SearchTree<K, V>,
+    dest: SearchTree<K, V>,
+    comparator: Comparator<K>)
 : Generator<Diff<K, V>> {
   yield* findDeletionsRecurse(orig, dest, comparator);
   yield* findUpdatesRecurse(orig, dest, comparator);
 }
 
 function* findDeletionsRecurse<K, V>(
-    orig: RbTree<K, V>,
-    destRoot: RbTree<K, V>,
-    comparator: RbComparator<K>)
+    orig: SearchTree<K, V>,
+    destRoot: SearchTree<K, V>,
+    comparator: Comparator<K>)
 : Generator<Deletion<K>> {
   if (orig === null || orig.tombstone) {
     return;
   }
 
   // See if the node still exists in dest.
-  const dest = rbFind(destRoot, orig.keyValue.key, comparator);
+  const dest = find(destRoot, orig.keyValue.key, comparator);
   if (dest === undefined || dest.tombstone) {
     // The node has been deleted.
     yield {
@@ -60,16 +59,16 @@ function* findDeletionsRecurse<K, V>(
 }
 
 function* findUpdatesRecurse<K, V>(
-  origRoot: RbTree<K, V>,
-  dest: RbTree<K, V>,
-  comparator: RbComparator<K>)
+  origRoot: SearchTree<K, V>,
+  dest: SearchTree<K, V>,
+  comparator: Comparator<K>)
 : Generator<Insertion<K, V> | Update<K, V>> {
   if (dest === null || dest.tombstone) {
     return;
   }
 
   // See if the node existed in orig.
-  const orig = rbFind(origRoot, dest.keyValue.key, comparator);
+  const orig = find(origRoot, dest.keyValue.key, comparator);
   if (orig === undefined || orig.tombstone) {
     // The node has been added.
     yield {

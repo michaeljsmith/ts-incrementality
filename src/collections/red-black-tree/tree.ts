@@ -1,19 +1,12 @@
+import { KeyValue, SearchNode } from "../search-tree/index.js";
+
 // Immutable red-black tree.
 export enum Color {R, B}
 
-export type RBKeyValue<K, V> = {
-  key: K,
-  value: V,
-};
-
-export type RbNode<K, V> = {
+export interface RbNode<K, V> extends SearchNode<K, V> {
   color: Color,
-  tombstone: boolean,
   left: RbTree<K, V>,
-  keyValue: RBKeyValue<K, V>,
   right: RbTree<K, V>,
-};
+}
 
 export type RbTree<K, V> = RbNode<K, V> | null;
-
-export type RbComparator<T> = (a: T, b: T) => number;

@@ -1,6 +1,6 @@
 import { Cache, CacheReference, newCache } from "../../cache.js";
 import { Collection } from "../collection.js";
-import { RbComparator } from "../red-black-tree/tree.js";
+import { Comparator } from "../search-tree/index.js";
 import { find, MapReduceCacheNode, MapReduceCacheTree } from "./map-reduce-cache-tree.js";
 
 type MapReduceCacheEntry<K, V, O> = {
@@ -13,7 +13,7 @@ type Reducer<O> = (cache: Cache, left: O, right: O) => O;
 export function mapReduce<K, V, O>(
     cacheReference: CacheReference,
     collection: Collection<K, V>,
-    comparator: RbComparator<K>,
+    comparator: Comparator<K>,
     mapper: Mapper<K, V, O>,
     reducer: Reducer<O>)
 : O | undefined {
@@ -32,7 +32,7 @@ export function mapReduce<K, V, O>(
 }
 
 type RecursionParameters<K, V, O> = {
-  comparator: RbComparator<K>,
+  comparator: Comparator<K>,
   mapper: Mapper<K, V, O>,
   reducer: Reducer<O>,
   previousCacheTree: MapReduceCacheTree<K, V, O>,

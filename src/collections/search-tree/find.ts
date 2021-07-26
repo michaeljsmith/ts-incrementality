@@ -1,6 +1,6 @@
-import { RbComparator, RbNode, RbTree } from "./tree.js";
+import { Comparator, SearchNode, SearchTree } from "../search-tree/index.js";
 
-export function rbFind<K, V>(tree: RbTree<K, V>, key: K, comparator: RbComparator<K>): RbNode<K, V> | undefined {
+export function find<K, V>(tree: SearchTree<K, V>, key: K, comparator: Comparator<K>): SearchNode<K, V> | undefined {
   if (tree === null) {
     return undefined;
   }
@@ -12,9 +12,9 @@ export function rbFind<K, V>(tree: RbTree<K, V>, key: K, comparator: RbComparato
     return tree;
   } else if (comparison < 0) {
     // Recurse to the left.
-    return rbFind(tree.left, key, comparator);
+    return find(tree.left, key, comparator);
   } else {
     // Recurse to the right.
-    return rbFind(tree.right, key, comparator);
+    return find(tree.right, key, comparator);
   }
 }
