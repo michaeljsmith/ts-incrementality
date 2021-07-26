@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { KeyValue } from "../search-tree/index.js";
 import { rbInsert } from "./insert.js";
-import { Color, RbNode, RbTree } from "./tree.js";
+import { Color, RbNode, RbTree } from "./red-black-tree.js";
 import { natural as compare } from "../../comparison.js";
 
 function node<K>(color: Color, left: RbTree<K, void>, key: K, right: RbTree<K, void>): RbNode<K, void> {
