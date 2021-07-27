@@ -1,7 +1,7 @@
 import { Cache, CacheReference, newCache } from "../../cache.js";
 import { Collection } from "../collection.js";
 import { Comparator } from "../../comparison.js";
-import { find, MapReduceCacheNode, MapReduceCacheTree } from "./map-reduce-cache-tree.js";
+import { find, findEnclosing, MapReduceCacheNode, MapReduceCacheTree } from "./map-reduce-cache-tree.js";
 
 type MapReduceCacheEntry<K, V, O> = {
   cacheTree: MapReduceCacheTree<K, V, O>;
@@ -21,11 +21,10 @@ export function mapReduce<K, V, O>(
     cacheTree: null
   }));
 
-  const newCacheTree = mapReduceRecurse(collection, {
+  const newCacheTree = mapReduceRecurse(collection, cacheEntry.cacheTree, {
     comparator,
     mapper,
     reducer,
-    previousCacheTree: cacheEntry.cacheTree,
   });
   cacheEntry.cacheTree = newCacheTree;
   return newCacheTree?.treeOutput;
@@ -35,20 +34,32 @@ type RecursionParameters<K, V, O> = {
   comparator: Comparator<K>,
   mapper: Mapper<K, V, O>,
   reducer: Reducer<O>,
-  previousCacheTree: MapReduceCacheTree<K, V, O>,
 };
 
 function mapReduceRecurse<K, V, O>(
     inputTree: Collection<K, V>,
+    previousCacheTree: MapReduceCacheTree<K, V, O>,
     params: RecursionParameters<K, V, O>)
 : MapReduceCacheTree<K, V, O> {
   if (inputTree === null) {
     return null;
   }
 
+  // Restrict our search in the cache tree to the smallest sub-tree containing
+  // the input key range.
+  const enclosingTree = findEnclosing(previousCacheTree, inputTree.keyRange, params.comparator);
+
+  if (enclosingTree !== null) {
+    // Check whether the input is unchanged, and if so, return the cached
+    // result immediately.
+    if (enclosingTree.inputTree === inputTree) {
+      return enclosingTree;
+    }
+  }
+
   // Look for the node in the cache.
   const existingCacheNode = find(
-    params.previousCacheTree, inputTree.keyValue.key, params.comparator);
+    enclosingTree, inputTree.keyValue.key, params.comparator);
 
   if (existingCacheNode !== undefined) {
     // Check whether the input is unchanged, and if so, return the cached
@@ -79,8 +90,8 @@ function mapReduceRecurse<K, V, O>(
       inputTree.keyValue.value);
 
   // Recurse to children.
-  cacheNode.left = mapReduceRecurse(inputTree.left, params);
-  cacheNode.right = mapReduceRecurse(inputTree.right, params);
+  cacheNode.left = mapReduceRecurse(inputTree.left, enclosingTree, params);
+  cacheNode.right = mapReduceRecurse(inputTree.right, enclosingTree, params);
 
   // Reduce the results.
   // TODO: Consider doing one-level deep equality testing to see if the result is

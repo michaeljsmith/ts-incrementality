@@ -18,3 +18,7 @@ export function keyRangeEnclosing<T>(comparator: Comparator<T>, range1: KeyRange
     max: max(comparator, range1.max, range2.max),
   };
 }
+
+export function keyRangeEncloses<T>(comparator: Comparator<T>, a: KeyRange<T>, b: KeyRange<T>): boolean {
+  return comparator(a.min, b.min) <= 0 && comparator(a.max, b.max) >= 0;
+}
