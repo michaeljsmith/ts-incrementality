@@ -1,5 +1,5 @@
 import { Comparator } from "../../comparison.js";
-import { KeyRange, keyRangeEncloses } from "../key-range.js";
+import { KeyRange, keyRangeContains, keyRangeEncloses } from "../key-range.js";
 import { SearchNode } from "../search-tree/search-tree.js";
 
 export type MapReduceCacheNode<K, V, O> = {
@@ -27,14 +27,18 @@ export function find<K, V, O>(
     return undefined;
   }
 
-  // Check which way to recurse.
-  const comparison = comparator(key, tree.key);
-  if (comparison === 0) {
-    // We have found the desired cache node.
+  // Check whether we have found the desired cache node.
+  if (comparator(key, tree.key) === 0) {
     return tree;
-  } else if (comparison < 0) {
+  }
+
+  // Recurse left if necessary.
+  if (tree.left !== null && keyRangeContains(comparator, tree.left.inputTree.keyRange, key)) {
     return find(tree.left, key, comparator);
-  } else if (comparison > 0) {
+  }
+
+  // Recurse right if necessary.
+  if (tree.right !== null && keyRangeContains(comparator, tree.right.inputTree.keyRange, key)) {
     return find(tree.right, key, comparator);
   }
 }
