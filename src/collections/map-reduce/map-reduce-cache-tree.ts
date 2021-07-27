@@ -8,7 +8,7 @@ export type MapReduceCacheNode<K, V, O> = {
   reduceCacheRight: {},
 
   left: MapReduceCacheTree<K, V, O>,
-  key: K,
+  key?: K,
   inputTree: SearchNode<K, V>,
   nodeOutput: O | undefined,
   treeOutput: O | undefined,
@@ -28,7 +28,7 @@ export function find<K, V, O>(
   }
 
   // Check whether we have found the desired cache node.
-  if (comparator(key, tree.key) === 0) {
+  if (tree.key !== undefined && comparator(key, tree.key) === 0) {
     return tree;
   }
 

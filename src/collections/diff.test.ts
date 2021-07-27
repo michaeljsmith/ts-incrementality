@@ -5,7 +5,7 @@ import { KeyValue, SearchNode, searchNode, SearchTree, searchTombstone } from ".
 
 function node(
     left: SearchTree<string, number>,
-    keyValue: KeyValue<string, number>,
+    keyValue: KeyValue<string, number> | undefined,
     right: SearchTree<string, number>)
 : SearchNode<string, number> {
   return searchNode(compare(), left, keyValue, right);
@@ -13,7 +13,7 @@ function node(
 
 function tombstone(
     left: SearchTree<string, number>,
-    keyValue: KeyValue<string, number>,
+    keyValue: KeyValue<string, number> | undefined,
     right: SearchTree<string, number>)
 : SearchNode<string, number> {
   return searchTombstone(compare(), left, keyValue, right);
@@ -46,6 +46,19 @@ describe('diff', function() {
     }]);
   });
 
+  it('finds addition in tree with missing key', function() {
+    const orig = null;
+    const dest = node(
+      node(null, {key: 'a', value: 1}, null),
+      undefined,
+      null);
+    expect([...diff(orig, dest, compare())]).deep.equals([{
+      diffType: 'insertion',
+      key: 'a',
+      value: 1,
+    }]);
+  });
+
   it('finds addition in singleton, replacing tombstone', function() {
     const orig = tombstone(null, {key: 'a', value: 1}, null);
     const dest = node(null, {key: 'a', value: 1}, null);
@@ -68,6 +81,18 @@ describe('diff', function() {
 
   it('finds deletion in singleton', function() {
     const orig = node(null, {key: 'a', value: 1}, null);
+    const dest = null;
+    expect([...diff(orig, dest, compare())]).deep.equals([{
+      diffType: 'deletion',
+      key: 'a',
+    }]);
+  });
+
+  it('finds deletion in tree with missing key', function() {
+    const orig = node(
+      node(null, {key: 'a', value: 1}, null),
+      undefined,
+      null);
     const dest = null;
     expect([...diff(orig, dest, compare())]).deep.equals([{
       diffType: 'deletion',

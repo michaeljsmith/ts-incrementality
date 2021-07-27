@@ -4,11 +4,11 @@ import { mapReduce } from "./map-reduce.js";
 import { natural as compare } from "../../comparison.js";
 import { KeyValue, SearchNode, searchNode, searchTombstone, SearchTree } from "../search-tree/index.js";
 
-function node(left: SearchTree<string, number>, keyValue: KeyValue<string, number>, right: SearchTree<string, number>): SearchNode<string, number> {
+function node(left: SearchTree<string, number>, keyValue: KeyValue<string, number> | undefined, right: SearchTree<string, number>): SearchNode<string, number> {
   return searchNode(compare(), left, keyValue, right);
 }
 
-function tombstone(left: SearchTree<string, number>, keyValue: KeyValue<string, number>, right: SearchTree<string, number>): SearchNode<string, number> {
+function tombstone(left: SearchTree<string, number>, keyValue: KeyValue<string, number> | undefined, right: SearchTree<string, number>): SearchNode<string, number> {
   return searchTombstone(compare(), left, keyValue, right);
 }
 
@@ -117,6 +117,14 @@ describe('map-reduce', function() {
     expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 3]);
   });
 
+  it('ignores missing key when reducing', function() {
+    const tree = tombstone(
+      node(null, {key: 'a', value: 1}, null),
+      undefined,
+      node(null, {key: 'c', value: 3}, null));
+    expect(mapReduce(cacheReference, tree, compare(), map, reduce)).deep.equals([1, 3]);
+  });
+
   it('caches tree', function() {
     const tree = node(
       node(null, {key: 'a', value: 1}, null),
@@ -127,6 +135,50 @@ describe('map-reduce', function() {
     expect(reduceCount).equals(1);
     mapReduce(cacheReference, tree, compare(), map, reduce);
     expect(mapCount).equals(2);
+  });
+
+  it('caches subtree', function() {
+    const child = node(null, { key: 'a', value: 1 }, null);
+    const tree1 = node(
+      child,
+      {key: 'b', value: 2},
+      null);
+    mapReduce(cacheReference, tree1, compare(), map, reduce);
+    expect(mapCount).equals(2);
+    const tree2 = node(
+      child,
+      {key: 'b', value: 3},
+      null);
+    mapReduce(cacheReference, tree2, compare(), map, reduce);
+    expect(mapCount).equals(3);
+  });
+
+  it('caches tree with missing key', function() {
+    const tree = node(
+      node(null, {key: 'a', value: 1}, null),
+      undefined,
+      node(null, {key: 'b', value: 2}, null));
+    mapReduce(cacheReference, tree, compare(), map, reduce);
+    expect(mapCount).equals(2);
+    expect(reduceCount).equals(1);
+    mapReduce(cacheReference, tree, compare(), map, reduce);
+    expect(mapCount).equals(2);
+  });
+
+  it('caches subtree when root is missing key', function() {
+    const child = node(null, { key: 'a', value: 1 }, null);
+    const tree1 = node(
+      child,
+      undefined,
+      node(null, { key: 'b', value: 2 }, null));
+    mapReduce(cacheReference, tree1, compare(), map, reduce);
+    expect(mapCount).equals(2);
+    const tree2 = node(
+      child,
+      undefined,
+      node(null, { key: 'b', value: 2 }, null));
+    mapReduce(cacheReference, tree2, compare(), map, reduce);
+    expect(mapCount).equals(3);
   });
 
   it('re-evaluates tree', function() {

@@ -8,7 +8,7 @@ export function find<K, V>(tree: SearchTree<K, V>, key: K, comparator: Comparato
   }
 
   // Check if we have found the node.
-  if (tree.keyValue.key !== undefined && comparator(key, tree.keyValue.key) === 0) {
+  if (tree.keyValue !== undefined && comparator(key, tree.keyValue.key) === 0) {
     return tree;
   }
 

@@ -1,2 +1,2 @@
 export { find } from './find.js';
-export { KeyValue, SearchNode, SearchTree, searchNode, searchTombstone, searchGeneralNode } from './search-tree.js';
+export { KeyValue, SearchNode, SearchTree, StrictSearchNode, searchNode, searchTombstone, searchGeneralNode, searchNodeFrom } from './search-tree.js';

@@ -46,20 +46,22 @@ function* findDeletionsRecurse<K, V>(
     return;
   }
 
-  // See if the node still exists in dest.
-  const dest = find(destEnclosing, orig.keyValue.key, comparator);
-  if (dest === undefined || dest.tombstone) {
-    // The node has been deleted.
-    yield {
-      diffType: 'deletion',
-      key: orig.keyValue.key,
-    };
-    return;
-  }
+  // If this node has a key, see if the node still exists in dest.
+  if (orig.keyValue !== undefined) {
+    const dest = find(destEnclosing, orig.keyValue.key, comparator);
+    if (dest === undefined || dest.tombstone) {
+      // The node has been deleted.
+      yield {
+        diffType: 'deletion',
+        key: orig.keyValue.key,
+      };
+      return;
+    }
 
-  // If the value is unchanged, then we can prune this subtree.
-  if (dest === orig) {
-    return;
+    // If the value is unchanged, then we can prune this subtree.
+    if (dest === orig) {
+      return;
+    }
   }
 
   // Otherwise recurse to children.
@@ -83,28 +85,30 @@ function* findUpdatesRecurse<K, V>(
     return;
   }
 
-  // See if the node existed in orig.
-  const orig = find(origEnclosing, dest.keyValue.key, comparator);
-  if (orig === undefined || orig.tombstone) {
-    // The node has been added.
-    yield {
-      diffType: 'insertion',
-      ...dest.keyValue,
-    };
-    return;
-  }
+  // If this node has a key, see if the node existed in orig.
+  if (dest.keyValue !== undefined) {
+    const orig = find(origEnclosing, dest.keyValue.key, comparator);
+    if (orig === undefined || orig.tombstone) {
+      // The node has been added.
+      yield {
+        diffType: 'insertion',
+        ...dest.keyValue,
+      };
+      return;
+    }
 
-  // If the value is unchanged, then we can prune this subtree.
-  if (dest === orig) {
-    return;
-  }
+    // If the value is unchanged, then we can prune this subtree.
+    if (dest === orig) {
+      return;
+    }
 
-  // See whether the root value has changed.
-  if (dest.keyValue.value !== orig.keyValue.value) {
-    yield {
-      diffType: 'update',
-      ...dest.keyValue,
-    };
+    // See whether the root value has changed.
+    if (orig.keyValue !== undefined && dest.keyValue.value !== orig.keyValue.value) {
+      yield {
+        diffType: 'update',
+        ...dest.keyValue,
+      };
+    }
   }
 
   // Recurse to children.

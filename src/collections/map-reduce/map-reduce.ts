@@ -59,10 +59,10 @@ function mapReduceRecurse<K, V, O>(
   }
 
   // Look for the node in the cache.
-  const existingCacheNode = find(
-    enclosingTree, inputTree.keyValue.key, params.comparator);
+  const existingCacheNode = inputTree.keyValue === undefined ?
+    enclosingTree : find(enclosingTree, inputTree.keyValue.key, params.comparator) ?? null;
 
-  if (existingCacheNode !== undefined) {
+  if (existingCacheNode !== null) {
     // Check whether the input is unchanged, and if so, return the cached
     // result immediately.
     if (existingCacheNode.inputTree === inputTree) {
@@ -74,7 +74,7 @@ function mapReduceRecurse<K, V, O>(
   // TODO: Consider doing one-level deep equality testing to see if the result is
   // unchanged - this could significantly reduce the amount of propagation.
   const {cache: mapCache, cacheContext: mapCacheContext} = newCacheContext(previousCacheTree?.mapCache);
-  const nodeOutput = inputTree.tombstone ? undefined :
+  const nodeOutput = inputTree.tombstone || inputTree.keyValue === undefined ? undefined :
     params.mapper(
       mapCacheContext,
       inputTree.keyValue.key,
@@ -104,7 +104,7 @@ function mapReduceRecurse<K, V, O>(
     reduceCacheLeft,
     reduceCacheRight,
     left,
-    key: inputTree.keyValue.key,
+    key: inputTree.keyValue?.key,
     inputTree,
     nodeOutput,
     treeOutput,

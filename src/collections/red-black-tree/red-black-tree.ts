@@ -1,6 +1,5 @@
 import { Comparator } from "../../comparison.js";
-import { KeyValue, searchGeneralNode, SearchNode } from "../search-tree/index.js";
-import { searchNodeFrom } from "../search-tree/search-tree.js";
+import { KeyValue, searchGeneralNode, SearchNode, searchNodeFrom, StrictSearchNode } from "../search-tree/index.js";
 
 // Immutable red-black tree.
 export enum Color {R, B}
@@ -8,6 +7,7 @@ export enum Color {R, B}
 export interface RbNode<K, V> extends SearchNode<K, V> {
   color: Color,
   left: RbTree<K, V>,
+  keyValue: KeyValue<K, V>,
   right: RbTree<K, V>,
 }
 
@@ -41,15 +41,25 @@ export function rbGeneralNode<K, V>(
     right: RbTree<K, V>,
     tombstone: boolean)
 : RbNode<K, V> {
+  const baseNode = searchGeneralNode(comparator, left, keyValue, right, tombstone);
+  if (baseNode.keyValue === undefined) {
+    throw "undefined node";
+  }
+
   return {
-    ...searchGeneralNode(comparator, left, keyValue, right, tombstone),
+    ...baseNode as StrictSearchNode<K, V>,
     color,
-  };
+  } as RbNode<K, V>;
 }
 
 export function rbNodeFrom<K, V>(comparator: Comparator<K>, node: Omit<RbNode<K, V>, 'keyRange'>): RbNode<K, V> {
+  const baseNode = searchNodeFrom(comparator, node);
+  if (baseNode.keyValue === undefined) {
+    throw "undefined node";
+  }
+
   return {
-    ...searchNodeFrom(comparator, node),
+    ...baseNode,
     color: node.color,
   };
 }
