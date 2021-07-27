@@ -1,6 +1,6 @@
 import { natural as compare } from "../comparison.js";
 import { expect } from "chai";
-import { keyRangeEncloses, keyRangeEnclosing, pointKeyRange } from "./key-range.js";
+import { keyRangeContains, keyRangeEncloses, keyRangeEnclosing, pointKeyRange } from "./key-range.js";
 
 describe('key-range', function() {
   describe('pointKeyRange', function() {
@@ -14,6 +14,28 @@ describe('key-range', function() {
       expect(keyRangeEnclosing(compare(), {
         min: 1, max: 2}, {min: 3, max: 4})).deep.equals({
           min: 1, max: 4});
+    });
+  });
+
+  describe('keyRangeContains', function() {
+    it('detects contains, low boundary', function() {
+      expect(keyRangeContains(compare(), {min: 1, max: 3}, 1)).true;
+    });
+
+    it('detects contains, high boundary', function() {
+      expect(keyRangeContains(compare(), {min: 1, max: 3}, 3)).true;
+    });
+
+    it('detects contains, point range', function() {
+      expect(keyRangeContains(compare(), {min: 1, max: 1}, 1)).true;
+    });
+
+    it('detects not contains, low boundary', function() {
+      expect(keyRangeContains(compare(), {min: 1, max: 3}, 0)).false;
+    });
+
+    it('detects not contains, high boundary', function() {
+      expect(keyRangeContains(compare(), {min: 1, max: 3}, 4)).false;
     });
   });
 

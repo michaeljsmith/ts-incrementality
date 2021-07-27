@@ -1,21 +1,26 @@
 import { SearchNode, SearchTree } from "../search-tree/index.js";
 import { Comparator } from "../../comparison.js";
+import { keyRangeContains } from "../key-range.js";
 
 export function find<K, V>(tree: SearchTree<K, V>, key: K, comparator: Comparator<K>): SearchNode<K, V> | undefined {
   if (tree === null) {
     return undefined;
   }
 
-  // Check which way to recurse.
-  const comparison = comparator(key, tree.keyValue.key);
-  if (comparison == 0) {
-    // We have found the node to delete.
+  // Check if we have found the node.
+  if (tree.keyValue.key !== undefined && comparator(key, tree.keyValue.key) === 0) {
     return tree;
-  } else if (comparison < 0) {
-    // Recurse to the left.
+  }
+
+  // Recurse left if necessary.
+  if (tree.left !== null && keyRangeContains(comparator, tree.left.keyRange, key)) {
     return find(tree.left, key, comparator);
-  } else {
-    // Recurse to the right.
+  }
+
+  // Recurse right if necessary.
+  if (tree.right !== null && keyRangeContains(comparator, tree.right.keyRange, key)) {
     return find(tree.right, key, comparator);
   }
+
+  return undefined;
 }
