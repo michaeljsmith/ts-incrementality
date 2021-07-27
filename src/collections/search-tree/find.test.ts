@@ -12,7 +12,7 @@ function tombstone(left: SearchTree<string, void>, key: string, right: SearchTre
   return searchTombstone(compare(), left, {key, value: undefined as void}, right);
 }
 
-describe('red-black-tree', function() {
+describe('search-tree', function() {
   describe('find', function() {
     it('returns undefined in empty tree', function() {
       expect(find(null, 'a', compare())).undefined;

@@ -1,4 +1,5 @@
 import { Comparator } from "../comparison.js";
+import { findEnclosing } from "./search-tree/find-enclosing.js";
 import { find, SearchTree } from "./search-tree/index.js";
 
 export type Insertion<K, V> = {
@@ -38,8 +39,15 @@ function* findDeletionsRecurse<K, V>(
     return;
   }
 
+  const destEnclosing = findEnclosing(destRoot, orig.keyRange, comparator);
+
+  // If the value is unchanged, then we can prune this subtree.
+  if (destEnclosing === orig) {
+    return;
+  }
+
   // See if the node still exists in dest.
-  const dest = find(destRoot, orig.keyValue.key, comparator);
+  const dest = find(destEnclosing, orig.keyValue.key, comparator);
   if (dest === undefined || dest.tombstone) {
     // The node has been deleted.
     yield {
@@ -55,8 +63,8 @@ function* findDeletionsRecurse<K, V>(
   }
 
   // Otherwise recurse to children.
-  yield* findDeletionsRecurse(orig.left, destRoot, comparator);
-  yield* findDeletionsRecurse(orig.right, destRoot, comparator);
+  yield* findDeletionsRecurse(orig.left, destEnclosing, comparator);
+  yield* findDeletionsRecurse(orig.right, destEnclosing, comparator);
 }
 
 function* findUpdatesRecurse<K, V>(
@@ -68,8 +76,15 @@ function* findUpdatesRecurse<K, V>(
     return;
   }
 
+  const origEnclosing = findEnclosing(origRoot, dest.keyRange, comparator);
+
+  // If the value is unchanged, then we can prune this subtree.
+  if (dest === origEnclosing) {
+    return;
+  }
+
   // See if the node existed in orig.
-  const orig = find(origRoot, dest.keyValue.key, comparator);
+  const orig = find(origEnclosing, dest.keyValue.key, comparator);
   if (orig === undefined || orig.tombstone) {
     // The node has been added.
     yield {
@@ -93,6 +108,6 @@ function* findUpdatesRecurse<K, V>(
   }
 
   // Recurse to children.
-  yield* findUpdatesRecurse(origRoot, dest.left, comparator);
-  yield* findUpdatesRecurse(origRoot, dest.right, comparator);
+  yield* findUpdatesRecurse(origEnclosing, dest.left, comparator);
+  yield* findUpdatesRecurse(origEnclosing, dest.right, comparator);
 }
