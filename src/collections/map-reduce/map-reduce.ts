@@ -61,7 +61,10 @@ function mapReduceRecurse<K, V, O>(
   // If the node was not found, then we have not previously evaluated this
   // node, so create a new, empty cache node for it now.
   const cacheNode: Partial<MapReduceCacheNode<K, V, O>> =
-    existingCacheNode ?? {
+    {
+      mapCache: existingCacheNode?.mapCache,
+      reduceCacheLeft: existingCacheNode?.reduceCacheLeft,
+      reduceCacheRight: existingCacheNode?.reduceCacheRight,
       key: inputTree.keyValue.key,
       inputTree,
     };
