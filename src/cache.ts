@@ -1,37 +1,38 @@
-export interface Cache {
-  (key: string): CacheReference;
+export interface CacheStore {
+  [key: string]: {};
+}
 
-  // For detecting tracking duplicate key usage.
-  incrementVisitKey(): void;
+export interface CacheContext {
+  (key: string): CacheReference;
 }
 
 export interface CacheReference {
-  getOrCreate<T extends {}>(init: () => T): T;
+  value: {} | unknown;
 }
 
-export function newCache(): Cache {
-  const cache = new Map<string, { visitKey: number; entry: {}; }>();
-  let visitKey = 0;
-  const result = (key: string) => ({
-    getOrCreate<T extends {}>(init: () => T) {
-      let node = cache.get(key);
-      if (node === undefined) {
-        node = {
-          visitKey: -1,
-          entry: init(),
-        };
-        cache.set(key, node);
-      }
-      if (node.visitKey === visitKey) {
-        throw `Referenced cache entry ${key} multiple times.`;
-      }
-      node.visitKey = visitKey;
-      return node.entry as T;
-    }
-  });
-  result.incrementVisitKey = () => {
-    ++visitKey;
-  };
+export function newCacheContext(previousCache: CacheStore | undefined) {
+  const cache = {} as CacheStore;
 
-  return result;
+  return {
+    cache,
+    cacheContext: (key: string) => ({
+      get value(): {} | undefined {
+        if (key in cache) {
+          throw `Referenced cache entry ${key} multiple times.`;
+        }
+        if (previousCache === undefined) {
+          return undefined;
+        }
+        cache[key] = previousCache[key];
+        return previousCache[key];
+      },
+      set value(newValue: {} | undefined) {
+        if (newValue === undefined) {
+          delete cache[key];
+        } else {
+          cache[key] = newValue;
+        }
+      },
+    }),
+  };
 }

@@ -1,4 +1,4 @@
-import { Cache, CacheReference } from "../../cache.js";
+import { CacheContext, CacheReference } from "../../cache.js";
 import { expect } from "chai";
 import { mapReduce } from "./map-reduce.js";
 import { natural as compare } from "../../comparison.js";
@@ -13,8 +13,8 @@ function tombstone(left: SearchTree<string, number>, keyValue: KeyValue<string, 
 }
 
 type CacheEntry<T, Args> = {
-  args?: Args,
-  value?: T,
+  args: Args,
+  value: T,
 };
 
 function argsEqual<Args extends unknown[]>(left: Args, right: Args) {
@@ -22,23 +22,26 @@ function argsEqual<Args extends unknown[]>(left: Args, right: Args) {
 }
 
 function cached<T, Args extends unknown[]>(
-    parentCache: Cache, args: Args, evaluate: () => T): T {
-  const cache = parentCache('root').getOrCreate(() => ({} as CacheEntry<T, Args>));
+    parentCache: CacheContext, args: Args, evaluate: () => T): T {
+  const rootCacheContext = parentCache('root');
+  const previousCache = rootCacheContext.value as CacheEntry<T, Args>;
 
-  if (cache.args !== undefined && cache.value !== undefined) {
-    if (argsEqual(cache.args, args)) {
-      return cache.value;
+  if (previousCache !== undefined) {
+    if (argsEqual(previousCache.args, args)) {
+      return previousCache.value;
     }
   }
 
   const result = evaluate();
-  cache.args = args;
-  cache.value = result;
+  rootCacheContext.value = {
+    args,
+    value: result,
+  }
   return result;
 }
 
 let mapCount = 0;
-function map(cache: Cache, inputKey: string, inputValue: number): number[] {
+function map(cache: CacheContext, inputKey: string, inputValue: number): number[] {
   return cached(cache, [inputKey, inputValue], () => {
     ++mapCount;
     return [inputValue];
@@ -46,7 +49,7 @@ function map(cache: Cache, inputKey: string, inputValue: number): number[] {
 }
 
 let reduceCount = 0;
-function reduce(cache: Cache, left: number[], right: number[]): number[] {
+function reduce(cache: CacheContext, left: number[], right: number[]): number[] {
   return cached(cache, [left, right], () => {
     ++reduceCount;
     return left.concat(right);
@@ -54,15 +57,8 @@ function reduce(cache: Cache, left: number[], right: number[]): number[] {
 }
 
 function newCacheReference(): CacheReference {
-  let cache: unknown = undefined;
   return {
-    getOrCreate<T>(init: () => T): T {
-      if (cache === undefined) {
-        cache = init();
-      }
-
-      return cache as T;
-    }
+    value: undefined,
   };
 }
 
@@ -181,7 +177,7 @@ describe('map-reduce', function() {
 
   it('caches reduce', function() {
     const mapResult: number[] = [];
-    function mapToEmptyList(cache: Cache, key: string, value: number) {
+    function mapToEmptyList(cache: CacheContext, key: string, value: number) {
       return mapResult;
     }
 

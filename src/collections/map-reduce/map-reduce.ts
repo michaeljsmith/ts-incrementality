@@ -1,4 +1,4 @@
-import { Cache, CacheReference, newCache } from "../../cache.js";
+import { CacheContext, CacheReference, newCacheContext } from "../../cache.js";
 import { Collection } from "../collection.js";
 import { Comparator } from "../../comparison.js";
 import { find, findEnclosing, MapReduceCacheNode, MapReduceCacheTree } from "./map-reduce-cache-tree.js";
@@ -7,8 +7,8 @@ type MapReduceCacheEntry<K, V, O> = {
   cacheTree: MapReduceCacheTree<K, V, O>;
 };
 
-type Mapper<K, V, O> = (cache: Cache, inputKey: K, inputValue: V) => O;
-type Reducer<O> = (cache: Cache, left: O, right: O) => O;
+type Mapper<K, V, O> = (cache: CacheContext, inputKey: K, inputValue: V) => O;
+type Reducer<O> = (cache: CacheContext, left: O, right: O) => O;
 
 export function mapReduce<K, V, O>(
     cacheReference: CacheReference,
@@ -17,17 +17,18 @@ export function mapReduce<K, V, O>(
     mapper: Mapper<K, V, O>,
     reducer: Reducer<O>)
 : O | undefined {
-  const cacheEntry = cacheReference.getOrCreate<MapReduceCacheEntry<K, V, O>>(() => ({
-    cacheTree: null
-  }));
+  const previousEntry = cacheReference.value as MapReduceCacheEntry<K, V, O> | undefined;
 
-  const newCacheTree = mapReduceRecurse(collection, cacheEntry.cacheTree, {
+  const cacheTree = mapReduceRecurse(collection, previousEntry?.cacheTree ?? null, {
     comparator,
     mapper,
     reducer,
   });
-  cacheEntry.cacheTree = newCacheTree;
-  return newCacheTree?.treeOutput;
+  const cacheEntry: MapReduceCacheEntry<K, V, O> = {
+    cacheTree
+  }
+  cacheReference.value = cacheEntry;
+  return cacheTree?.treeOutput;
 }
 
 type RecursionParameters<K, V, O> = {
@@ -69,67 +70,59 @@ function mapReduceRecurse<K, V, O>(
     }
   }
 
-  // If the node was not found, then we have not previously evaluated this
-  // node, so create a new, empty cache node for it now.
-  const cacheNode: Partial<MapReduceCacheNode<K, V, O>> =
-    {
-      mapCache: existingCacheNode?.mapCache,
-      reduceCacheLeft: existingCacheNode?.reduceCacheLeft,
-      reduceCacheRight: existingCacheNode?.reduceCacheRight,
-      key: inputTree.keyValue.key,
-      inputTree,
-    };
-
   // Update the root value.
   // TODO: Consider doing one-level deep equality testing to see if the result is
   // unchanged - this could significantly reduce the amount of propagation.
-  cacheNode.nodeOutput = inputTree.tombstone ? undefined :
+  const {cache: mapCache, cacheContext: mapCacheContext} = newCacheContext(previousCacheTree?.mapCache);
+  const nodeOutput = inputTree.tombstone ? undefined :
     params.mapper(
-      referencedCache(cacheNode, 'mapCache'),
+      mapCacheContext,
       inputTree.keyValue.key,
       inputTree.keyValue.value);
 
   // Recurse to children.
-  cacheNode.left = mapReduceRecurse(inputTree.left, enclosingTree, params);
-  cacheNode.right = mapReduceRecurse(inputTree.right, enclosingTree, params);
+  const left = mapReduceRecurse(inputTree.left, enclosingTree, params);
+  const right = mapReduceRecurse(inputTree.right, enclosingTree, params);
 
   // Reduce the results.
   // TODO: Consider doing one-level deep equality testing to see if the result is
   // unchanged - this could significantly reduce the amount of propagation.
-  const leftReduction = maybeReduce(
-    referencedCache(cacheNode, 'reduceCacheLeft'),
+  const {cache: reduceCacheLeft, result: leftReduction} = maybeReduce(
+    previousCacheTree?.reduceCacheLeft,
     params.reducer,
-    cacheNode.left?.treeOutput,
-    cacheNode.nodeOutput);
+    left?.treeOutput,
+    nodeOutput);
 
-  cacheNode.treeOutput = maybeReduce(
-    referencedCache(cacheNode, 'reduceCacheRight'),
+  const {cache: reduceCacheRight, result: treeOutput} = maybeReduce(
+    previousCacheTree?.reduceCacheRight,
     params.reducer,
     leftReduction,
-    cacheNode.right?.treeOutput);
+    right?.treeOutput);
 
-  return cacheNode as MapReduceCacheNode<K, V, O>;
+  return {
+    mapCache,
+    reduceCacheLeft,
+    reduceCacheRight,
+    left,
+    key: inputTree.keyValue.key,
+    inputTree,
+    nodeOutput,
+    treeOutput,
+    right,
+  };
 }
 
 function maybeReduce<O>(
-  cache: Cache,
-  reducer: Reducer<O>,
-  left: O | undefined,
-  right: O | undefined)
-: O | undefined {
-  return left === undefined ? right :
+    previousCache: {} | undefined,
+    reducer: Reducer<O>,
+    left: O | undefined,
+    right: O | undefined) {
+  const {cache, cacheContext} = newCacheContext(previousCache);
+  const result = left === undefined ? right :
     right === undefined ? left :
-    reducer(cache, left, right);
-}
-
-function referencedCache<K, V, O>(
-    cacheNode: Partial<MapReduceCacheNode<K, V, O>>,
-    cacheKey: 'mapCache' | 'reduceCacheLeft' | 'reduceCacheRight')
-: Cache {
-  if (cacheNode[cacheKey] === undefined) {
-    cacheNode[cacheKey] = newCache();
-  } else {
-    (cacheNode[cacheKey] as Cache).incrementVisitKey();
+    reducer(cacheContext, left, right);
+  return {
+    result,
+    cache,
   }
-  return cacheNode[cacheKey] as Cache;
 }

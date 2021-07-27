@@ -9,6 +9,9 @@ function node(
     right: MapReduceCacheTree<string, void, number>)
 : MapReduceCacheNode<string, void, number> {
   return {
+    mapCache: {},
+    reduceCacheLeft: {},
+    reduceCacheRight: {},
     left,
     key: key,
     inputTree: searchNode(compare(), left?.inputTree ?? null, {key, value: undefined as void}, right?.inputTree ?? null),

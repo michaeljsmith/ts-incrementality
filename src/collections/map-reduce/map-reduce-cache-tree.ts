@@ -3,9 +3,9 @@ import { KeyRange, keyRangeContains, keyRangeEncloses } from "../key-range.js";
 import { SearchNode } from "../search-tree/search-tree.js";
 
 export type MapReduceCacheNode<K, V, O> = {
-  mapCache?: unknown,
-  reduceCacheLeft?: unknown,
-  reduceCacheRight?: unknown,
+  mapCache: {},
+  reduceCacheLeft: {},
+  reduceCacheRight: {},
 
   left: MapReduceCacheTree<K, V, O>,
   key: K,
